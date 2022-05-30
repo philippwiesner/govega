@@ -1,8 +1,8 @@
 package helper
 
-const (
-	tableSize  uint8 = 4
-	hashFactor uint8 = 31
+var (
+	tableSize  uint = 16
+	hashFactor uint = 31
 )
 
 type bucket struct {
@@ -11,43 +11,37 @@ type bucket struct {
 	next  *bucket
 }
 
-type HashTable struct {
-	table       []bucket
+type hashTable struct {
+	table       []*bucket
 	cap         uint
 	len         uint
 	BucketCount uint
 }
 
-func New() *HashTable {
-	buckets := make([]bucket, tableSize, tableSize)
-	hashTable := HashTable{buckets, uint(tableSize), 0, 0}
+func NewHashTable() *hashTable {
+	return newHashTable(tableSize)
+}
+
+func newHashTable(ts uint) *hashTable {
+	buckets := make([]*bucket, ts, ts)
+	hashTable := hashTable{buckets, ts, 0, 0}
 	return &hashTable
 }
 
-func (t *HashTable) hash(key string) uint {
+func (t *hashTable) hash(key string) uint {
 	var hash uint = 0
 	for _, c := range key {
-		hash = (uint(hashFactor)*hash + uint(c)) % t.cap
+		hash = ((hashFactor)*hash + uint(c)) % t.cap
 	}
 	return hash
 }
 
-func (t *HashTable) increase() {
-	newCap := t.cap + uint(tableSize)
-	newTable := make([]bucket, newCap, newCap)
-
-	for _, v := range t.table {
-		hash := t.hash(v.key)
-		newTable[hash] = v
-	}
-
-	t.table = newTable
-	t.cap = newCap
-}
-
-func (t *HashTable) Get(key string) interface{} {
+func (t *hashTable) Get(key string) interface{} {
 	hash := t.hash(key)
 	entry := t.table[hash]
+	if entry == nil {
+		return nil
+	}
 	if entry.key != "" {
 		for {
 			if entry.key == key {
@@ -56,35 +50,57 @@ func (t *HashTable) Get(key string) interface{} {
 			if entry.next == nil {
 				return nil
 			}
-			entry = *entry.next
+			entry = entry.next
 		}
 	}
 	return nil
 }
 
-func (t *HashTable) Add(key string, value interface{}) {
+func (t *hashTable) increase() {
+	newCap := t.cap + tableSize
+	newHashTable := newHashTable(newCap)
+
+	for _, v := range t.table {
+		for {
+			newHashTable.addBucket(v.key, v.value)
+			if v.next == nil {
+				break
+			}
+			v = v.next
+		}
+	}
+
+	t.table = newHashTable.table
+	t.cap = newHashTable.cap
+}
+
+func (t *hashTable) addBucket(key string, value interface{}) {
 	hash := t.hash(key)
 	entry := t.table[hash]
 	newBucket := bucket{key, value, nil}
-	if entry.key == "" {
-		if t.cap == t.len {
-			t.increase()
-		}
-		t.table[hash] = newBucket
+	if entry == nil {
+		t.table[hash] = &newBucket
 		t.len++
 		t.BucketCount++
 	} else {
 		for {
 			if entry.key == key {
-				t.table[hash].value = value
+				entry.value = value
 				break
 			}
 			if entry.next == nil {
-				t.table[hash].next = &newBucket
+				entry.next = &newBucket
 				t.BucketCount++
 				break
 			}
-			entry = *entry.next
+			entry = entry.next
 		}
 	}
+}
+
+func (t *hashTable) Add(key string, value interface{}) {
+	if t.cap == t.len {
+		t.increase()
+	}
+	t.addBucket(key, value)
 }

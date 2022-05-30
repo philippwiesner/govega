@@ -9,8 +9,11 @@ type Node struct {
 }
 
 func newNode(data interface{}) *Node {
-	n := Node{data, nil, nil}
-	return &n
+	return &Node{data: data}
+}
+
+func (n *Node) GetData() interface{} {
+	return n.data
 }
 
 type List struct {
@@ -20,8 +23,7 @@ type List struct {
 }
 
 func NewList() *List {
-	l := List{nil, nil, 0}
-	return &l
+	return &List{}
 }
 
 func (l *List) increment() {
@@ -36,14 +38,32 @@ func (l *List) IsEmpty() bool {
 	return l.tail == nil && l.head == nil && l.count == 0
 }
 
+func (l *List) GetCount() int {
+	return l.count
+}
+
+func (l *List) getHead() interface{} {
+	if l.head == nil {
+		return nil
+	} else {
+		return l.head.GetData()
+	}
+}
+
+func (l *List) getTail() interface{} {
+	if l.tail == nil {
+		return nil
+	} else {
+		return l.tail.GetData()
+	}
+}
+
 type Stack struct {
 	*List
 }
 
 func NewStack() *Stack {
-	l := NewList()
-	s := Stack{l}
-	return &s
+	return &Stack{List: NewList()}
 }
 
 func (s *Stack) Push(data interface{}) {
@@ -81,14 +101,20 @@ func (s *Stack) Pop() (interface{}, error) {
 	return data, nil
 }
 
+func (s *Stack) Top() interface{} {
+	return s.getHead()
+}
+
+func (s *Stack) Bottom() interface{} {
+	return s.getTail()
+}
+
 type Queue struct {
 	*List
 }
 
 func NewQueue() *Queue {
-	l := NewList()
-	q := Queue{l}
-	return &q
+	return &Queue{List: NewList()}
 }
 
 func (q *Queue) Add(data interface{}) {
@@ -123,4 +149,12 @@ func (q *Queue) Remove() (interface{}, error) {
 	node.last = nil
 	q.decrement()
 	return data, nil
+}
+
+func (q *Queue) Top() interface{} {
+	return q.getHead()
+}
+
+func (q *Queue) Bottom() interface{} {
+	return q.getTail()
 }

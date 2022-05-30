@@ -1,35 +1,92 @@
 package helper
 
 import (
-	"reflect"
+	"math/rand"
 	"testing"
 )
 
-func TestHashTable(t *testing.T) {
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+type testBucket1 struct {
+	key   string
+	value int
+}
+
+type testBucket struct {
+	key   string
+	value string
+}
+
+type testWant struct {
+	BucketCount uint
+	TableSize   uint
+}
+
+func randomString(l int) string {
+	bytes := make([]rune, l)
+
+	for i := range bytes {
+		bytes[i] = letters[rand.Intn(len(letters))]
+	}
+
+	return string(bytes)
+}
+
+func randomTestData(len int) []testBucket {
+	testBuckets := make([]testBucket, len)
+
+	min := 5
+	max := 20
+
+	for i := 0; i < len; i++ {
+		testBuckets[i].key = randomString(rand.Intn(max-min+1) + min)
+		testBuckets[i].value = randomString(rand.Intn(max-min+1) + min)
+	}
+
+	return testBuckets
+}
+
+func TestHashTable_Add(t *testing.T) {
 	tests := []struct {
-		key   string
-		value interface{}
+		in   []testBucket
+		want testWant
 	}{
-		{"hello", 1234},
-		{"world", "fsfgdfsdfgsfsd"},
-	}
-
-	hashTable := New()
-	cap := cap(hashTable.table)
-
-	if cap != int(tableSize) {
-		t.Fatalf("Cap is %v, should be %v", cap, tableSize)
-	}
-
-	for _, tc := range tests {
-		hashTable.Add(tc.key, tc.value)
+		{randomTestData(10), testWant{10, 16}},
+		{randomTestData(100), testWant{100, 32}},
 	}
 
 	for i, tc := range tests {
-		got := hashTable.Get(tc.key)
-		if !reflect.DeepEqual(tc.value, got) {
-			t.Fatalf("test %d: expected: %v, got: %v for key: %v! BucketCount: %d", i+1, tc.value, got, tc.key, hashTable.BucketCount)
-		}
-	}
 
+		hashTable := NewHashTable()
+
+		for _, b := range tc.in {
+			hashTable.Add(b.key, b.value)
+		}
+
+		gotBuckets := hashTable.BucketCount
+		if gotBuckets != tc.want.BucketCount {
+			t.Fatalf("test %d: Capacitiy expected: %v, got: %v", i+1, tc.want.BucketCount, gotBuckets)
+		}
+
+		gotTableSize := hashTable.cap
+		if gotTableSize != tc.want.TableSize {
+			t.Fatalf("test %d: TableSize expected: %v, got :%v. Debug: Table length %v", i+1, tc.want.TableSize, gotTableSize, hashTable.len)
+		}
+
+		for _, b := range tc.in {
+			got := hashTable.Get(b.key)
+			if got != b.value {
+				t.Fatalf("test %d: expected: %v:%v, got %v:%v", i+1, b.key, b.value, b.key, got)
+			}
+		}
+
+	}
+}
+
+func TestHashTable_Get(t *testing.T) {
+	ht := NewHashTable()
+	el := ht.Get("")
+	if el != nil {
+		t.Fatalf("Empty HashTable should return nil element")
+	}
 }
