@@ -1,3 +1,11 @@
+// Package helper
+//
+// provides basic data structures to build more complex data structures used in the compiler code architecture
+//
+// hashTable.go implements a basic hash table for storing elements based on a string key lookup in a table.
+// When the maximum table size is reached, the hash table will rehash into a bigger table increased by the tableSize
+// const.
+
 package helper
 
 import "errors"

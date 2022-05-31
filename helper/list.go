@@ -1,3 +1,9 @@
+// Package helper
+//
+// provides basic data structures to build more complex data structures used in the compiler code architecture
+//
+// list.go implements basic double linked list implementations for a queue and a stack
+
 package helper
 
 import "errors"
