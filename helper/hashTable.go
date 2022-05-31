@@ -1,5 +1,7 @@
 package helper
 
+import "errors"
+
 var (
 	tableSize  uint = 16
 	hashFactor uint = 31
@@ -36,24 +38,24 @@ func (t *hashTable) hash(key string) uint {
 	return hash
 }
 
-func (t *hashTable) Get(key string) interface{} {
+func (t *hashTable) Get(key string) (interface{}, error) {
 	hash := t.hash(key)
 	entry := t.table[hash]
 	if entry == nil {
-		return nil
+		return nil, errors.New("element not found")
 	}
 	if entry.key != "" {
 		for {
 			if entry.key == key {
-				return entry.value
+				return entry.value, nil
 			}
 			if entry.next == nil {
-				return nil
+				return nil, errors.New("element not found")
 			}
 			entry = entry.next
 		}
 	}
-	return nil
+	return nil, errors.New("empty key")
 }
 
 func (t *hashTable) increase() {
