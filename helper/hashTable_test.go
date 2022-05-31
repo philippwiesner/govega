@@ -7,11 +7,6 @@ import (
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-type testBucket1 struct {
-	key   string
-	value int
-}
-
 type testBucket struct {
 	key   string
 	value string
@@ -74,7 +69,7 @@ func TestHashTable_Add(t *testing.T) {
 		}
 
 		for _, b := range tc.in {
-			got := hashTable.Get(b.key)
+			got, _ := hashTable.Get(b.key)
 			if got != b.value {
 				t.Fatalf("test %d: expected: %v:%v, got %v:%v", i+1, b.key, b.value, b.key, got)
 			}
@@ -85,7 +80,7 @@ func TestHashTable_Add(t *testing.T) {
 
 func TestHashTable_Get(t *testing.T) {
 	ht := NewHashTable()
-	el := ht.Get("")
+	el, _ := ht.Get("")
 	if el != nil {
 		t.Fatalf("Empty HashTable should return nil element")
 	}
