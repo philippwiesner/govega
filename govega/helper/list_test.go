@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewList(t *testing.T) {
-	list := NewList()
+	list := newList()
 	if !list.IsEmpty() {
 		t.Fatalf("List not empty, got: %v", list)
 	}
@@ -66,7 +66,7 @@ func TestStack(t *testing.T) {
 		var got []interface{}
 		for !stack.IsEmpty() {
 			data, err := stack.Pop()
-			if err != nil {
+			if !err {
 				t.Errorf(`Error: #{err}`)
 			}
 			got = append(got, data)
@@ -79,9 +79,9 @@ func TestStack(t *testing.T) {
 
 func TestStackEmptyPop(t *testing.T) {
 	stack := NewStack()
-	got := interface{}(nil)
-	_, want := stack.Pop()
-	if want == nil {
+	want := false
+	_, got := stack.Pop()
+	if want != got {
 		t.Fatalf("Want %v, got: %v", want, got)
 	}
 }
@@ -103,7 +103,7 @@ func TestQueue(t *testing.T) {
 		var got []interface{}
 		for !queue.IsEmpty() {
 			data, err := queue.Remove()
-			if err != nil {
+			if !err {
 				t.Errorf(`Error: #{err}`)
 			}
 			got = append(got, data)
@@ -116,9 +116,9 @@ func TestQueue(t *testing.T) {
 
 func TestQueueEmptyRemove(t *testing.T) {
 	stack := NewQueue()
-	got := interface{}(nil)
-	_, want := stack.Remove()
-	if want == nil {
+	want := false
+	_, got := stack.Remove()
+	if want != got {
 		t.Fatalf("Want %v, got: %v", want, got)
 	}
 }
