@@ -58,8 +58,12 @@ func TestCombinedTokens(t *testing.T) {
 
 	for i, tc := range tests {
 		lexer := NewLexer([]byte(tc.in))
-		lexer.readch()
-		err := lexer.scanCombinedTokens('!', '=', language.Ne)
+		err := lexer.readch()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = lexer.scanCombinedTokens('!', '=', language.Ne)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -8,36 +8,36 @@ package tokens
 
 // token tag constants for identifying tokens. numbering start at 256 as the integers 0-255 represent runes (chars)
 const (
-	EQ           int = iota + 256 // ==
-	LE                            // <=
-	GE                            // >=
-	NE                            // !=
-	CONST                         // const
-	FUNC                          // func
-	WHILE                         // while
-	IF                            // if
-	ELIF                          // elif
-	ELSE                          // else
-	RETURN_VALUE                  // ->
-	RETURN                        // return
-	PASS                          // pass
-	CONTINUE                      // continue
-	BREAK                         // break
-	TRUE                          // true
-	FALSE                         // false
-	NOT                           // not
-	AND                           // and
-	BOOL_AND                      // &&
-	OR                            // or
-	BOOL_OR                       // ||
-	INDEX                         // [i]
-	ID                            // identifier
-	BASIC                         // basic data type (e.g. int, char)
-	FUNCTION                      // function identifier
-	TYPE                          // non-basic data types (e.g. string, array)
-	NUM                           // normal numbers (int)
-	REAL                          // real numbers (floating point)
-	LITERAL                       // everything enclosed in '' or ""
+	EQ          int = iota + 256 // ==
+	LE                           // <=
+	GE                           // >=
+	NE                           // !=
+	CONST                        // const
+	FUNC                         // func
+	WHILE                        // while
+	IF                           // if
+	ELIF                         // elif
+	ELSE                         // else
+	RETURNVALUE                  // ->
+	RETURN                       // return
+	PASS                         // pass
+	CONTINUE                     // continue
+	BREAK                        // break
+	TRUE                         // true
+	FALSE                        // false
+	NOT                          // not
+	AND                          // and
+	BOOLAND                      // &&
+	OR                           // or
+	BOOLOR                       // ||
+	INDEX                        // [i]
+	ID                           // identifier
+	BASIC                        // basic data type (e.g. int, char)
+	FUNCTION                     // function identifier
+	TYPE                         // non-basic data types (e.g. string, array)
+	NUM                          // normal numbers (int)
+	REAL                         // real numbers (floating point)
+	LITERAL                      // everything enclosed in '' or ""
 )
 
 // token struct represents simple basic language tokens identified by an integer number

@@ -79,10 +79,9 @@ func TestStack(t *testing.T) {
 
 func TestStackEmptyPop(t *testing.T) {
 	stack := NewStack()
-	want := false
 	_, got := stack.Pop()
-	if want != got {
-		t.Fatalf("Want %v, got: %v", want, got)
+	if !got {
+		t.Fatalf("Want false, got: %v", got)
 	}
 }
 
@@ -116,9 +115,8 @@ func TestQueue(t *testing.T) {
 
 func TestQueueEmptyRemove(t *testing.T) {
 	stack := NewQueue()
-	want := false
 	_, got := stack.Remove()
-	if want != got {
-		t.Fatalf("Want %v, got: %v", want, got)
+	if !got {
+		t.Fatalf("Want false, got: %v", got)
 	}
 }

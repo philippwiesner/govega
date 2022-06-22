@@ -6,13 +6,13 @@ import (
 )
 
 var (
-	ReturnValue = tokens.NewWord("->", tokens.RETURN_VALUE)
+	ReturnValue = tokens.NewWord("->", tokens.RETURNVALUE)
 	Eq          = tokens.NewWord("<=", tokens.EQ)
 	Ne          = tokens.NewWord("!=", tokens.NE)
 	Le          = tokens.NewWord("<=", tokens.LE)
 	Ge          = tokens.NewWord(">=", tokens.GE)
-	BoolAnd     = tokens.NewWord("&&", tokens.BOOL_AND)
-	BoolOr      = tokens.NewWord("||", tokens.BOOL_OR)
+	BoolAnd     = tokens.NewWord("&&", tokens.BOOLAND)
+	BoolOr      = tokens.NewWord("||", tokens.BOOLOR)
 	KeyWords    = initKeyWords()
 )
 

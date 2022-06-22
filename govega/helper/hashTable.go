@@ -16,7 +16,7 @@ var (
 	hashFactor uint = 31
 )
 
-// bucket is a internal structure to store element in hash table.
+// bucket is an internal structure to store element in hash table.
 // on hash collision buckets will be chained together.
 type bucket struct {
 	key   string      // name of the element in table
@@ -42,7 +42,7 @@ func NewHashTable() *HashTable {
 	return newHashTable(tableSize)
 }
 
-// newHashTable is the private constuctor for creating a new HashTable pointer. The private constructor let the
+// newHashTable is the private constructor for creating a new HashTable pointer. The private constructor let the
 // size of the HashTable choose for better testing.
 func newHashTable(ts uint) *HashTable {
 	buckets := make([]*bucket, ts, ts)
