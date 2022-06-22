@@ -1,11 +1,12 @@
-// Package language
+// Package tokens
 //
 // Defines basic language structures which can be used in the frontend to parse the language
 //
-// tokens.go defines language tokens which are defined by a unique ID for each tokens
+// tokens.go defines language tokens which are defined by a unique ID for each token
 
 package tokens
 
+// token tag constants for identifying tokens. numbering start at 256 as the integers 0-255 represent runes (chars)
 const (
 	EQ           int = iota + 256 // ==
 	LE                            // <=
@@ -39,12 +40,12 @@ const (
 	LITERAL                       // everything enclosed in '' or ""
 )
 
-// Token struct to represent simple basic language tokens
+// token struct represents simple basic language tokens identified by an integer number
 type token struct {
 	tag int
 }
 
-// NewToken is the constructor for a new tokens
+// newToken is the constructor for a new token
 func newToken(t int) *token {
 	return &token{tag: t}
 }
@@ -54,15 +55,15 @@ func (t *token) GetTag() int {
 	return t.tag
 }
 
-// Num is a numeric tokens
+// num is a numeric tokens
 type num struct {
 	*token
 	value int // tokens value
 }
 
-// NewNum is the constructor for a new numeric tokens
+// newNum is the constructor for a new numeric tokens
 //
-// The tokens tag is being set to NUM
+// The token tag is being set to NUM
 func newNum(v int) *num {
 	return &num{newToken(NUM), v}
 }
@@ -72,7 +73,7 @@ func (n *num) GetValue() int {
 	return n.value
 }
 
-// Word is a word tokens
+// word is a word token
 type word struct {
 	*token
 	lexeme string // word of the language (more than one character)
@@ -91,13 +92,13 @@ func (w *word) GetLexeme() string {
 	return w.lexeme
 }
 
-// RealNumber is a floating point number tokens
+// realNumber is a floating point number token
 type realNumber struct {
 	*token
 	value float64 // floating point number value
 }
 
-// NewReal is the constructor for a new real number
+// newReal is the constructor for a new real number
 func newReal(v float64) *realNumber {
 	return &realNumber{newToken(REAL), v}
 }
@@ -107,13 +108,13 @@ func (r *realNumber) GetValue() float64 {
 	return r.value
 }
 
-// Literal is a literal tokens (everything enclosed in '' or "")
+// literal is a literal tokens (everything enclosed in '' or "")
 type literal struct {
 	*token
 	content []rune // content between '' or ""
 }
 
-// NewLiteral is the constructor for a new literal tokens
+// newLiteral is the constructor for a new literal tokens
 func newLiteral(c []rune) *literal {
 	return &literal{newToken(LITERAL), c}
 }
