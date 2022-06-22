@@ -56,7 +56,7 @@ func (t *token) GetTag() int {
 
 // Num is a numeric tokens
 type num struct {
-	IToken
+	*token
 	value int // tokens value
 }
 
@@ -74,7 +74,7 @@ func (n *num) GetValue() int {
 
 // Word is a word tokens
 type word struct {
-	IToken
+	*token
 	lexeme string // word of the language (more than one character)
 }
 
@@ -93,7 +93,7 @@ func (w *word) GetLexeme() string {
 
 // RealNumber is a floating point number tokens
 type realNumber struct {
-	IToken
+	*token
 	value float64 // floating point number value
 }
 
@@ -109,7 +109,7 @@ func (r *realNumber) GetValue() float64 {
 
 // Literal is a literal tokens (everything enclosed in '' or "")
 type literal struct {
-	IToken
+	*token
 	content []rune // content between '' or ""
 }
 

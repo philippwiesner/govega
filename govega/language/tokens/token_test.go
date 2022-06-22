@@ -55,7 +55,7 @@ func Test(t *testing.T) {
 func TestInterface(t *testing.T) {
 	to := NewToken(NUM)
 	fmt.Println(to.GetTag())
-	to2 := NewWord("blubb", ID)
+	to2 := NewWord("blubb", FUNCTION)
 	fmt.Println(to2.GetTag())
 	fmt.Println(to2.GetLexeme())
 }
