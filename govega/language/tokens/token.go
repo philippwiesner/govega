@@ -111,15 +111,15 @@ func (r *realNumber) GetValue() float64 {
 // literal is a literal tokens (everything enclosed in '' or "")
 type literal struct {
 	*token
-	content []rune // content between '' or ""
+	content string // content between '' or ""
 }
 
 // newLiteral is the constructor for a new literal tokens
-func newLiteral(c []rune) *literal {
+func newLiteral(c string) *literal {
 	return &literal{newToken(LITERAL), c}
 }
 
 // GetContent public getter method for the literal content
-func (l *literal) GetContent() []rune {
+func (l *literal) GetContent() string {
 	return l.content
 }

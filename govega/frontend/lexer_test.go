@@ -67,13 +67,81 @@ func TestCombinedTokens(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		token, ok := lexer.tokenStream.Remove()
-		if !ok {
-			t.Fatalf("Error retrieving token from stream")
-		}
+		token, _ := lexer.tokenStream.Remove()
 
 		if token.GetTokenTag() != tc.want {
 			t.Fatalf("Test%d, token should be %v, but is %v", i, tc.want, token.GetTokenTag())
+		}
+
+	}
+}
+
+type LiteralTestWant struct {
+	start   rune
+	end     rune
+	tag     int
+	literal string
+}
+
+type LiteralTest struct {
+	in   string
+	want LiteralTestWant
+}
+
+func TestScanLiterals(t *testing.T) {
+	tests := []LiteralTest{
+		{
+			"'my literal'",
+			LiteralTestWant{'\'', '\'', tokens.LITERAL, "my literal"},
+		},
+		{
+			"'\\tmy \\nliteral'",
+			LiteralTestWant{'\'', '\'', tokens.LITERAL, "\tmy \nliteral"},
+		},
+		{
+			"\"my literal\"",
+			LiteralTestWant{'"', '"', tokens.LITERAL, "my literal"},
+		},
+		{
+			"'my \\x3A'",
+			LiteralTestWant{'\'', '\'', tokens.LITERAL, "my \x3a"},
+		},
+		{
+			"'my \\123 \\\\'",
+			LiteralTestWant{'\'', '\'', tokens.LITERAL, "my \123 \\"},
+		},
+	}
+	for i, tc := range tests {
+		lexer := NewLexer([]byte(tc.in))
+		err := lexer.readch()
+		if err != nil {
+			t.Fatalf("test%d: error reading first literal indicator: %v", i, err)
+		}
+
+		err = lexer.scanLiterals(lexer.peek)
+		if err != nil {
+			t.Fatalf("test%d: error reading literal: %v", i, err)
+		}
+
+		token, _ := lexer.tokenStream.Remove()
+
+		if token.GetTokenTag() != int(tc.want.start) {
+			t.Fatalf("test%d: Want token to be %v, but got: %v", i, tc.want.start, token.GetTokenTag())
+		}
+
+		token, _ = lexer.tokenStream.Remove()
+		if token.GetTokenTag() != tc.want.tag {
+			t.Fatalf("test%d: Want token to be %v, but got: %v", i, tc.want.tag, token.GetTokenTag())
+		} else {
+			literalToken := token.GetToken().(tokens.ILiteral)
+			if literalToken.GetContent() != tc.want.literal {
+				t.Fatalf("test%d: Want literal to be %v, but got: %v", i, tc.want.literal, literalToken.GetContent())
+			}
+		}
+
+		token, _ = lexer.tokenStream.Remove()
+		if token.GetTokenTag() != int(tc.want.start) {
+			t.Fatalf("test%d: Want token to be %v, but got: %v", i, tc.want.start, token.GetTokenTag())
 		}
 
 	}

@@ -2,7 +2,6 @@ package frontend
 
 import (
 	"bytes"
-	"fmt"
 	"govega/govega/dataStructs"
 	"govega/govega/helper"
 	"govega/govega/language"
@@ -13,6 +12,7 @@ import (
 
 type lexer struct {
 	line        int
+	pos         int
 	peek        rune
 	code        *bytes.Reader
 	tokenStream *dataStructs.TokenStream
@@ -23,6 +23,7 @@ func NewLexer(code []byte) *lexer {
 	return &lexer{
 		0,
 		0,
+		0,
 		bytes.NewReader(code),
 		dataStructs.NewTokenStream(),
 		language.KeyWords,
@@ -31,9 +32,14 @@ func NewLexer(code []byte) *lexer {
 
 func (l *lexer) readch() error {
 	ch, _, err := l.code.ReadRune()
+	l.pos++
 	if err != nil {
 		if err != io.EOF {
-			return fmt.Errorf("lexical error: Error reading character %v. Error is: %v", ch, err)
+			return &LexicalError{
+				"Error parsing file, probably malformed",
+				l.line,
+				l.pos,
+			}
 		} else {
 			l.peek = ch
 			return err
@@ -69,22 +75,139 @@ func (l *lexer) scanCombinedTokens(fch rune, sch rune, word tokens.IWord) error 
 
 func (l *lexer) scanLiterals(indicator rune) error {
 	var (
-		literal []rune
+		literal string
+		char    rune
 		err     error
 	)
 	if l.peek == indicator {
 		l.tokenStream.Add(tokens.NewToken(int(indicator)), l.line)
+		err = l.readch()
 		for ; l.peek != indicator && err == nil; err = l.readch() {
-			literal = append(literal, l.peek)
+			if l.peek == '\n' {
+				return &LexicalError{
+					"string literal not terminated",
+					l.line,
+					l.pos,
+				}
+			}
+			if l.peek == '\\' {
+				err = l.readch()
+				if err != nil {
+					return &LexicalError{
+						"invalid escape sequence",
+						l.line,
+						l.pos,
+					}
+				}
+				switch l.peek {
+				case 'b':
+					char = '\b'
+				case 'f':
+					char = '\f'
+				case 'n':
+					char = '\n'
+				case 'r':
+					char = '\r'
+				case 't':
+					char = '\t'
+				case 'v':
+					char = '\v'
+				case '\\':
+					char = '\\'
+				case '"':
+					if indicator != '"' {
+						char = '"'
+					} else {
+						return &LexicalErrorChar{
+							LexicalError{"invalid escape sequence in literal",
+								l.line,
+								l.pos},
+							l.peek,
+						}
+					}
+				case '\'':
+					if indicator != '\'' {
+						char = '\''
+					} else {
+						return &LexicalErrorChar{
+							LexicalError{"invalid escape sequence in literal",
+								l.line,
+								l.pos},
+							l.peek,
+						}
+					}
+				case 'x':
+					hex := ""
+					for i := 0; i < 2; i++ {
+						err = l.readch()
+						if err != nil {
+							return &LexicalError{
+								"invalid escape sequence",
+								l.line,
+								l.pos,
+							}
+						}
+						// transform uppercase hex in lowercase for lookup
+						if l.peek > 64 && l.peek < 91 {
+							l.peek = l.peek + 32
+						}
+						hex = hex + string(l.peek)
+					}
+					hexLookup, ok := language.EscapeHexaLiterals.Get(hex)
+					if !ok {
+						return &LexicalErrorChar{
+							LexicalError{"invalid hexadecimal literal. must contain two digits between 00-FF",
+								l.line,
+								l.pos},
+							l.peek,
+						}
+					}
+					char = hexLookup.(rune)
+				case '0', '1', '2', '3':
+					oct := string(l.peek)
+					for i := 0; i < 2; i++ {
+						err = l.readch()
+						if err != nil {
+							return &LexicalError{
+								"invalid escape sequence",
+								l.line,
+								l.pos,
+							}
+						}
+						oct = oct + string(l.peek)
+					}
+					octLookup, ok := language.EscapeOctalLiterals.Get(oct)
+					if !ok {
+						return &LexicalErrorChar{
+							LexicalError{"invalid octal literal. must contain three digits between 000-377",
+								l.line,
+								l.pos},
+							l.peek,
+						}
+					}
+					char = octLookup.(rune)
+				default:
+					return &LexicalError{
+						"invalid escape sequence",
+						l.line,
+						l.pos,
+					}
+				}
+				l.peek = 0
+			} else {
+				char = l.peek
+			}
+			literal = literal + string(char)
 		}
 		if err != nil {
-			return err
+			return &LexicalError{
+				"string literal not terminated",
+				l.line,
+				l.pos,
+			}
 		}
 		l.tokenStream.Add(tokens.NewLiteral(literal), l.line)
-		if err = l.readch(); err != nil {
-			return err
-		}
-		l.tokenStream.Add(tokens.NewToken(int(indicator)), l.line)
+		l.tokenStream.Add(tokens.NewToken(int(l.peek)), l.line)
 	}
 	return nil
 }
@@ -116,4 +239,18 @@ func (l *lexer) scanNumbers() error {
 		}
 	}
 	return nil
+}
+
+func (l *lexer) Scan() (ts *dataStructs.TokenStream, e error) {
+	for err := *new(error); ; err = l.readch() {
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				return nil, err
+			}
+		}
+		l.tokenStream.Add(tokens.NewToken(int(l.peek)), l.line)
+	}
+	return l.tokenStream, nil
 }

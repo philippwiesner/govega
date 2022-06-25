@@ -6,6 +6,8 @@
 
 package helper
 
+import "fmt"
+
 // Node is a basic list element which contains some data and has two links to the next and last Node
 type Node struct {
 	data interface{}
@@ -99,9 +101,9 @@ func (s *Stack) Push(data interface{}) {
 }
 
 // Pop public method for retrieving elements from the top of the Stack
-func (s *Stack) Pop() (result interface{}, ok bool) {
+func (s *Stack) Pop() (result interface{}, err error) {
 	if s.IsEmpty() {
-		return nil, false
+		return nil, fmt.Errorf("stack pop: %w", EmptyStackError)
 	}
 
 	node := s.head
@@ -117,7 +119,7 @@ func (s *Stack) Pop() (result interface{}, ok bool) {
 	node.last = nil
 	node = nil
 	s.decrement()
-	return data, true
+	return data, nil
 }
 
 // Top public getter method for getting the top element of the Stack
@@ -156,9 +158,9 @@ func (q *Queue) Add(data interface{}) {
 }
 
 // Remove public method for retrieving elements from the front of the Queue
-func (q *Queue) Remove() (result interface{}, ok bool) {
+func (q *Queue) Remove() (result interface{}, err error) {
 	if q.IsEmpty() {
-		return nil, false
+		return nil, fmt.Errorf("queue remove: %w", EmptyQueueError)
 	}
 
 	node := q.head
@@ -173,7 +175,7 @@ func (q *Queue) Remove() (result interface{}, ok bool) {
 	node.next = nil
 	node.last = nil
 	q.decrement()
-	return data, true
+	return data, nil
 }
 
 // Top public getter method for getting the oldest element in the Queue

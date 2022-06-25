@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
@@ -66,8 +67,8 @@ func TestStack(t *testing.T) {
 		var got []interface{}
 		for !stack.IsEmpty() {
 			data, err := stack.Pop()
-			if !err {
-				t.Errorf(`Error: #{err}`)
+			if err == EmptyStackError {
+				t.Error(err)
 			}
 			got = append(got, data)
 		}
@@ -79,9 +80,9 @@ func TestStack(t *testing.T) {
 
 func TestStackEmptyPop(t *testing.T) {
 	stack := NewStack()
-	_, got := stack.Pop()
-	if !got {
-		t.Fatalf("Want false, got: %v", got)
+	_, err := stack.Pop()
+	if !errors.Is(err, EmptyStackError) {
+		t.Fatalf("error is not %v, but %v", EmptyStackError, err)
 	}
 }
 
@@ -102,8 +103,8 @@ func TestQueue(t *testing.T) {
 		var got []interface{}
 		for !queue.IsEmpty() {
 			data, err := queue.Remove()
-			if !err {
-				t.Errorf(`Error: #{err}`)
+			if err == EmptyQueueError {
+				t.Error(err)
 			}
 			got = append(got, data)
 		}
@@ -115,8 +116,8 @@ func TestQueue(t *testing.T) {
 
 func TestQueueEmptyRemove(t *testing.T) {
 	stack := NewQueue()
-	_, got := stack.Remove()
-	if !got {
-		t.Fatalf("Want false, got: %v", got)
+	_, err := stack.Remove()
+	if !errors.Is(err, EmptyQueueError) {
+		t.Fatalf("error is not %v, but %v", EmptyQueueError, err)
 	}
 }

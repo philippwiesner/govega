@@ -11,19 +11,13 @@ func TestNewTokenStream(t *testing.T) {
 	ts.Add(tokens.NewToken(3), 5)
 	ts.Add(tokens.NewNum(5), 6)
 
-	e, ok := ts.Remove()
-	if !ok {
-		t.Fatalf("Error removing element")
-	}
+	e, _ := ts.Remove()
 
 	if e.GetTokenTag() != 3 {
 		t.Fatalf("Token %d is not tag 3", e.GetTokenTag())
 	}
 
-	e, ok = ts.Remove()
-	if !ok {
-		t.Fatalf("Error removing element")
-	}
+	e, _ = ts.Remove()
 	token := e.GetToken()
 	if e.GetTokenTag() == tokens.NUM {
 		num := token.(tokens.INum)

@@ -35,3 +35,55 @@ func TestKeyWords(t *testing.T) {
 	}
 
 }
+
+func TestHexaLiterals(t *testing.T) {
+	tests := []struct {
+		in   string
+		want rune
+	}{
+		{"00", rune(00)},
+		{"0a", rune(10)},
+		{"ff", rune(255)},
+	}
+
+	if EscapeHexaLiterals.BucketCount != 256 {
+		t.Fatalf("Table should have 256 entries")
+	}
+
+	for i, tc := range tests {
+		hex, ok := EscapeHexaLiterals.Get(tc.in)
+		if !ok {
+			t.Fatalf("test%d: Element %v not found", i, tc.in)
+		}
+		hexRune := hex.(rune)
+		if hexRune != tc.want {
+			t.Fatalf("test%d: Want %v, but got %v", i, tc.want, hexRune)
+		}
+	}
+}
+
+func TestOctaLiterals(t *testing.T) {
+	tests := []struct {
+		in   string
+		want rune
+	}{
+		{"000", rune(000)},
+		{"123", rune(83)},
+		{"377", rune(255)},
+	}
+
+	if EscapeOctalLiterals.BucketCount != 256 {
+		t.Fatalf("Table should have 256 entries")
+	}
+
+	for i, tc := range tests {
+		oct, ok := EscapeOctalLiterals.Get(tc.in)
+		if !ok {
+			t.Fatalf("test%d: Element %v not found", i, tc.in)
+		}
+		octRune := oct.(rune)
+		if octRune != tc.want {
+			t.Fatalf("test%d: Want %v, but got %v", i, tc.want, octRune)
+		}
+	}
+}

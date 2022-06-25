@@ -56,11 +56,11 @@ func NewReal(v float64) IReal {
 // ILiteral interface extends IToken interface for literal tokens
 type ILiteral interface {
 	IToken
-	GetContent() []rune
+	GetContent() string
 }
 
 // NewLiteral generates new ILiteral interface based on literal token
-func NewLiteral(c []rune) ILiteral {
+func NewLiteral(c string) ILiteral {
 	var literal ILiteral = newLiteral(c)
 	return literal
 }

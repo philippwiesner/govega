@@ -1,7 +1,6 @@
 package tokens
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -43,19 +42,4 @@ func TestNewReal(t *testing.T) {
 	if n.GetTag() == r.GetTag() {
 		t.Fatalf("Num and Real are incomparable types")
 	}
-}
-
-func Test(t *testing.T) {
-	a := NewToken('g')
-	b := NewWord("böib", ID)
-	a.GetTag()
-	b.GetTag()
-}
-
-func TestInterface(t *testing.T) {
-	to := NewToken(NUM)
-	fmt.Println(to.GetTag())
-	to2 := NewWord("blubb", FUNCTION)
-	fmt.Println(to2.GetTag())
-	fmt.Println(to2.GetLexeme())
 }
