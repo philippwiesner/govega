@@ -4,7 +4,7 @@
 //
 // tokenStream.go defines a stream of language tokens with is created during the lexical analyses and disected by the
 // parser to check for the correct language grammar
-package dataStructs
+package frontend
 
 import (
 	"fmt"
@@ -14,8 +14,8 @@ import (
 
 // TokenBucket stores an tokens.IToken interface as a token the code line the token occures
 type TokenBucket struct {
-	token tokens.IToken
-	line  int
+	token      tokens.IToken
+	errorState ErrorState
 }
 
 // GetToken getter method for the tokens.IToken interface
@@ -23,9 +23,9 @@ func (tb *TokenBucket) GetToken() tokens.IToken {
 	return tb.token
 }
 
-// GetLine getter method for the token line
-func (tb *TokenBucket) GetLine() int {
-	return tb.line
+// GetErrorState getter method for retrieving error information during failure
+func (tb *TokenBucket) GetErrorState() *ErrorState {
+	return &tb.errorState
 }
 
 // GetTokenTag getter method to retrieve the token tag
@@ -44,8 +44,8 @@ func NewTokenStream() *TokenStream {
 }
 
 // Add overwrites helper.Queue Add method to add a new token and its line of occurense to the token stream
-func (ts *TokenStream) Add(token tokens.IToken, line int) {
-	ts.Queue.Add(&TokenBucket{token, line})
+func (ts *TokenStream) Add(token tokens.IToken, state ErrorState) {
+	ts.Queue.Add(&TokenBucket{token, state})
 }
 
 // Remove overwrites helper.Queue Remove method to remove the top element from the token stream

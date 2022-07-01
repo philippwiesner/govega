@@ -1,4 +1,4 @@
-package dataStructs
+package frontend
 
 import (
 	"govega/govega/language/tokens"
@@ -8,8 +8,8 @@ import (
 func TestNewTokenStream(t *testing.T) {
 	ts := NewTokenStream()
 
-	ts.Add(tokens.NewToken(3), 5)
-	ts.Add(tokens.NewNum(5), 6)
+	ts.Add(tokens.NewToken(3), *new(ErrorState))
+	ts.Add(tokens.NewNum(5), *new(ErrorState))
 
 	e, _ := ts.Remove()
 
