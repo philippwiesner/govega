@@ -165,7 +165,7 @@ func (l *lexer) scanNumbers() error {
 	if l.peek > 47 && l.peek < 58 {
 		value := 0
 		for ; l.peek > 47 && l.peek < 58 && err == nil; err = l.readch() {
-			value = 10*value + (int(l.peek) - 48)
+			value = 10*value + (int(l.peek) - '0')
 		}
 		if err == io.EOF {
 			l.tokenStream.Add(tokens.NewNum(value), l.errorState)
@@ -182,7 +182,7 @@ func (l *lexer) scanNumbers() error {
 			fraction := float64(10)
 			err = l.readch()
 			for ; l.peek > 47 && l.peek < 58 && err == nil; err = l.readch() {
-				realNumber = realNumber + (float64(l.peek)-48)/fraction
+				realNumber = realNumber + (float64(l.peek)-'0')/fraction
 				fraction *= 10
 			}
 			if err == io.EOF {
@@ -194,6 +194,41 @@ func (l *lexer) scanNumbers() error {
 			}
 			l.tokenStream.Add(tokens.NewReal(realNumber), l.errorState)
 		}
+	}
+	return nil
+}
+
+func (l *lexer) scanWords() error {
+	var (
+		word string
+		err  error
+	)
+	if (l.peek > 64 && l.peek < 91) || (l.peek > 96 && l.peek < 123) {
+		for ; ((l.peek > 64 && l.peek < 91) || (l.peek > 96 && l.peek < 123) || (l.peek > 47 && l.peek < 58)) && err == nil; err = l.readch() {
+			word += string(l.peek)
+		}
+		if err == io.EOF {
+			lookup, ok := l.words.Get(word)
+			if ok {
+				l.tokenStream.Add(lookup.(tokens.IWord), l.errorState)
+				l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
+				return nil
+			}
+			identifier := tokens.NewWord(word, tokens.ID)
+			l.words.Add(word, identifier)
+			l.tokenStream.Add(identifier, l.errorState)
+			l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
+		} else if err != nil {
+			return err
+		}
+		lookup, ok := l.words.Get(word)
+		if ok {
+			l.tokenStream.Add(lookup.(tokens.IWord), l.errorState)
+			return nil
+		}
+		identifier := tokens.NewWord(word, tokens.ID)
+		l.words.Add(word, identifier)
+		l.tokenStream.Add(identifier, l.errorState)
 	}
 	return nil
 }

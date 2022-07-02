@@ -255,3 +255,36 @@ func TestScanNumbers(t *testing.T) {
 
 	}
 }
+
+func TestScanWords(t *testing.T) {
+	tests := []struct {
+		in   string
+		want tokens.IWord
+	}{
+		{"while", tokens.NewWord("while", tokens.WHILE)},
+		{"var1", tokens.NewWord("var1", tokens.ID)},
+	}
+
+	for i, tc := range tests {
+		test := fmt.Sprintf("test%d", i+1)
+		lexer := NewLexer([]byte(tc.in), test)
+
+		err := lexer.readch()
+		if err != nil {
+			t.Fatalf("%v: Error reading first word char %v\nDebug: %v", test, err, lexer.errorState)
+		}
+
+		err = lexer.scanWords()
+		if err != io.EOF && err != nil {
+			t.Fatalf("%v: Error reading full word: %v\nDebug Output: %v", test, err, lexer.errorState)
+		}
+
+		token, err := lexer.tokenStream.Remove()
+		word := token.GetToken().(tokens.IWord)
+		if !reflect.DeepEqual(word, tc.want) {
+			t.Fatalf("%v: Word: %#v is not %#v", test, word, tc.want)
+		}
+
+	}
+
+}
