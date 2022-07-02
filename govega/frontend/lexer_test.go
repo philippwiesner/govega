@@ -188,6 +188,11 @@ func TestScanLiteralsFailures(t *testing.T) {
 			"'foo\\088Bar'",
 			NewLexicalError(invalidEscapeSequenceOct, ErrorState{1, 8, "test6", "'foo\\088"}),
 		},
+		{
+			"no literal terminator",
+			"'fooBar",
+			NewLexicalError(literalNotTerminated, ErrorState{1, 8, "test7", "'fooBar\x00"}),
+		},
 	}
 	var lexError *LexicalError
 	for i, tc := range tests {
@@ -206,6 +211,46 @@ func TestScanLiteralsFailures(t *testing.T) {
 			}
 		default:
 			t.Fatalf("test%d %v:\nUnexpected error: %v\nDebug information: %#v", i+1, tc.name, err, lexer.errorState)
+		}
+
+	}
+}
+
+func TestScanNumbers(t *testing.T) {
+	tests := []struct {
+		in   string
+		want interface{}
+	}{
+		{"123", tokens.NewNum(123)}, {"12,3", tokens.NewNum(12)}, {"12.3", tokens.NewReal(12.3)},
+	}
+
+	for i, tc := range tests {
+		lexer := NewLexer([]byte(tc.in), fmt.Sprintf("test%d", i+1))
+		err := lexer.readch()
+		if err != nil {
+			t.Fatalf("test%d: Error reading first digit: %v\nDebug Output: %v", i+1, err, lexer.errorState)
+		}
+
+		err = lexer.scanNumbers()
+		if err != io.EOF && err != nil {
+			t.Fatalf("test%d: Error reading full digit: %v\nDebug Output: %v", i+1, err, lexer.errorState)
+		}
+
+		tokenBucket, err := lexer.tokenStream.Remove()
+		numberToken := tokenBucket.GetToken()
+		switch number := numberToken.(type) {
+		case tokens.INum:
+			wantNumber := tc.want.(tokens.INum)
+			if number.GetValue() != wantNumber.GetValue() {
+				t.Fatalf("test%d: Want number to be %d, but got %d", i+1, wantNumber.GetValue(), number.GetValue())
+			}
+		case tokens.IReal:
+			wantNumber := tc.want.(tokens.IReal)
+			if number.GetValue() != wantNumber.GetValue() {
+				t.Fatalf("test%d: Want number to be %f, but got %f", i+1, wantNumber.GetValue(), number.GetValue())
+			}
+		default:
+			t.Fatalf("test%d: Number Token not valid: %#v", i+1, numberToken)
 		}
 
 	}

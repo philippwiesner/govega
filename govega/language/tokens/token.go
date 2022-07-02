@@ -8,7 +8,8 @@ package tokens
 
 // token tag constants for identifying tokens. numbering start at 256 as the integers 0-255 represent runes (chars)
 const (
-	EQ          int = iota + 256 // ==
+	EOF         int = iota + 256 // end of file
+	EQ                           // ==
 	LE                           // <=
 	GE                           // >=
 	NE                           // !=

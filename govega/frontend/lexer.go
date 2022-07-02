@@ -6,7 +6,6 @@ import (
 	"govega/govega/language"
 	"govega/govega/language/tokens"
 	"io"
-	"unicode"
 )
 
 type lexer struct {
@@ -163,12 +162,16 @@ func (l *lexer) scanLiterals(indicator rune) error {
 
 func (l *lexer) scanNumbers() error {
 	var err error
-	if unicode.IsDigit(l.peek) {
+	if l.peek > 47 && l.peek < 58 {
 		value := 0
-		for ; unicode.IsDigit(l.peek) && err == nil; err = l.readch() {
-			value = 10*value + int(l.peek)
+		for ; l.peek > 47 && l.peek < 58 && err == nil; err = l.readch() {
+			value = 10*value + (int(l.peek) - 48)
 		}
-		if err != nil {
+		if err == io.EOF {
+			l.tokenStream.Add(tokens.NewNum(value), l.errorState)
+			l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
+			return err
+		} else if err != nil {
 			return err
 		}
 		if l.peek != '.' {
@@ -177,11 +180,16 @@ func (l *lexer) scanNumbers() error {
 		} else {
 			realNumber := float64(value)
 			fraction := float64(10)
-			for ; unicode.IsDigit(l.peek) && err == nil; err = l.readch() {
-				realNumber = realNumber + float64(l.peek)/fraction
+			err = l.readch()
+			for ; l.peek > 47 && l.peek < 58 && err == nil; err = l.readch() {
+				realNumber = realNumber + (float64(l.peek)-48)/fraction
 				fraction *= 10
 			}
-			if err != nil {
+			if err == io.EOF {
+				l.tokenStream.Add(tokens.NewReal(realNumber), l.errorState)
+				l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
+				return err
+			} else if err != nil {
 				return err
 			}
 			l.tokenStream.Add(tokens.NewReal(realNumber), l.errorState)
