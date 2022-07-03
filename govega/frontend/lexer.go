@@ -1,3 +1,9 @@
+// Package frontend
+//
+// The compilers' frontend is responsible for validating and analysing the source programming language.
+//
+// lexer.go implements a lexical scanner which reads the source code character by character and tries to create language
+// tokens which can later be analysed for correct syntax with the parser.
 package frontend
 
 import (
@@ -25,6 +31,17 @@ func NewLexer(code []byte, fileName string) *lexer {
 	}
 }
 
+func (l *lexer) unreadch() error {
+	err := l.code.UnreadRune()
+	if err != nil {
+		return err
+	}
+	l.errorState.position--
+	l.errorState.lineFeed = l.errorState.lineFeed[:len(l.errorState.lineFeed)-1]
+	l.peek = 0
+	return nil
+}
+
 func (l *lexer) readch() error {
 	ch, _, err := l.code.ReadRune()
 	l.errorState.position++
@@ -34,7 +51,7 @@ func (l *lexer) readch() error {
 			return NewLexicalError(malformedCode, l.errorState)
 		} else {
 			l.peek = ch
-			return err
+			return nil
 		}
 	}
 	l.peek = ch
@@ -51,16 +68,14 @@ func (l *lexer) readcch(char rune) (bool, error) {
 }
 
 func (l *lexer) scanCombinedTokens(fch rune, sch rune, word tokens.IWord) error {
-	if l.peek == fch {
-		ok, err := l.readcch(sch)
-		if err != nil {
-			return err
-		}
-		if ok {
-			l.tokenStream.Add(word, l.errorState)
-		} else {
-			l.tokenStream.Add(tokens.NewToken(int(fch)), l.errorState)
-		}
+	ok, err := l.readcch(sch)
+	if err != nil {
+		return err
+	}
+	if ok {
+		l.tokenStream.Add(word, l.errorState)
+	} else {
+		l.tokenStream.Add(tokens.NewToken(int(fch)), l.errorState)
 	}
 	return nil
 }
@@ -71,129 +86,118 @@ func (l *lexer) scanLiterals(indicator rune) error {
 		char    rune
 		err     error
 	)
-	if l.peek == indicator {
-		l.tokenStream.Add(tokens.NewToken(int(indicator)), l.errorState)
-		err = l.readch()
-		for ; l.peek != indicator && err == nil; err = l.readch() {
-			if l.peek == '\n' {
-				return NewLexicalError(literalNotTerminated, l.errorState)
-			}
-			if l.peek == '\\' {
-				err = l.readch()
-				if err != nil {
-					return NewLexicalError(invalidEscapeSequence, l.errorState)
-				}
-				switch l.peek {
-				case 'b':
-					char = '\b'
-				case 'f':
-					char = '\f'
-				case 'n':
-					char = '\n'
-				case 'r':
-					char = '\r'
-				case 't':
-					char = '\t'
-				case 'v':
-					char = '\v'
-				case '\\':
-					char = '\\'
-				case '"':
-					if indicator == '"' {
-						char = '"'
-					} else {
-						return NewLexicalError(invalidEscapeSequenceLiteral, l.errorState)
-					}
-				case '\'':
-					if indicator == '\'' {
-						char = '\''
-					} else {
-						return NewLexicalError(invalidEscapeSequenceLiteral, l.errorState)
-					}
-				case 'x':
-					hex := ""
-					for i := 0; i < 2; i++ {
-						err = l.readch()
-						if err != nil {
-							return NewLexicalError(invalidEscapeSequenceHex, l.errorState)
-						}
-						// transform uppercase hex in lowercase for lookup
-						if l.peek > 64 && l.peek < 91 {
-							l.peek = l.peek + 32
-						}
-						hex = hex + string(l.peek)
-					}
-					hexLookup, ok := language.EscapeHexaLiterals.Get(hex)
-					if !ok {
-						return NewLexicalError(invalidEscapeSequenceHex, l.errorState)
-					}
-					char = hexLookup.(rune)
-				case '0', '1', '2', '3':
-					oct := string(l.peek)
-					for i := 0; i < 2; i++ {
-						err = l.readch()
-						if err != nil {
-							return NewLexicalError(invalidEscapeSequenceOct, l.errorState)
-						}
-						oct = oct + string(l.peek)
-					}
-					octLookup, ok := language.EscapeOctalLiterals.Get(oct)
-					if !ok {
-						return NewLexicalError(invalidEscapeSequenceOct, l.errorState)
-					}
-					char = octLookup.(rune)
-				default:
-					return NewLexicalError(invalidEscapeSequence, l.errorState)
-				}
-				l.peek = 0
-			} else {
-				char = l.peek
-			}
-			literal = literal + string(char)
-		}
-		if err != nil {
+	l.tokenStream.Add(tokens.NewToken(int(indicator)), l.errorState)
+	err = l.readch()
+	for ; l.peek != indicator && err == nil; err = l.readch() {
+		if l.peek == '\n' || l.peek == '\x00' {
 			return NewLexicalError(literalNotTerminated, l.errorState)
 		}
-		l.tokenStream.Add(tokens.NewLiteral(literal), l.errorState)
-		l.tokenStream.Add(tokens.NewToken(int(l.peek)), l.errorState)
+		if l.peek == '\\' {
+			err = l.readch()
+			if err != nil {
+				return NewLexicalError(invalidEscapeSequence, l.errorState)
+			}
+			switch l.peek {
+			case 'b':
+				char = '\b'
+			case 'f':
+				char = '\f'
+			case 'n':
+				char = '\n'
+			case 'r':
+				char = '\r'
+			case 't':
+				char = '\t'
+			case 'v':
+				char = '\v'
+			case '\\':
+				char = '\\'
+			case '"':
+				if indicator == '"' {
+					char = '"'
+				} else {
+					return NewLexicalError(invalidEscapeSequenceLiteral, l.errorState)
+				}
+			case '\'':
+				if indicator == '\'' {
+					char = '\''
+				} else {
+					return NewLexicalError(invalidEscapeSequenceLiteral, l.errorState)
+				}
+			case 'x':
+				hex := ""
+				for i := 0; i < 2; i++ {
+					err = l.readch()
+					if err != nil {
+						return NewLexicalError(invalidEscapeSequenceHex, l.errorState)
+					}
+					// transform uppercase hex in lowercase for lookup
+					if l.peek > 64 && l.peek < 91 {
+						l.peek = l.peek + 32
+					}
+					hex = hex + string(l.peek)
+				}
+				hexLookup, ok := language.EscapeHexaLiterals.Get(hex)
+				if !ok {
+					return NewLexicalError(invalidEscapeSequenceHex, l.errorState)
+				}
+				char = hexLookup.(rune)
+			case '0', '1', '2', '3':
+				oct := string(l.peek)
+				for i := 0; i < 2; i++ {
+					err = l.readch()
+					if err != nil {
+						return NewLexicalError(invalidEscapeSequenceOct, l.errorState)
+					}
+					oct = oct + string(l.peek)
+				}
+				octLookup, ok := language.EscapeOctalLiterals.Get(oct)
+				if !ok {
+					return NewLexicalError(invalidEscapeSequenceOct, l.errorState)
+				}
+				char = octLookup.(rune)
+			default:
+				return NewLexicalError(invalidEscapeSequence, l.errorState)
+			}
+		} else {
+			char = l.peek
+		}
+		literal = literal + string(char)
 	}
+	if err != nil {
+		return NewLexicalError(literalNotTerminated, l.errorState)
+	}
+	l.tokenStream.Add(tokens.NewLiteral(literal), l.errorState)
+	l.tokenStream.Add(tokens.NewToken(int(l.peek)), l.errorState)
 	return nil
 }
 
 func (l *lexer) scanNumbers() error {
-	var err error
-	if l.peek > 47 && l.peek < 58 {
-		value := 0
+	var (
+		err   error
+		value int
+	)
+	for ; l.peek > 47 && l.peek < 58 && err == nil; err = l.readch() {
+		value = 10*value + (int(l.peek) - '0')
+	}
+	if err != nil {
+		return err
+	}
+	if l.peek != '.' {
+		l.tokenStream.Add(tokens.NewNum(value), l.errorState)
+		return nil
+	} else {
+		realNumber := float64(value)
+		fraction := float64(10)
+		err = l.readch()
 		for ; l.peek > 47 && l.peek < 58 && err == nil; err = l.readch() {
-			value = 10*value + (int(l.peek) - '0')
+			realNumber = realNumber + (float64(l.peek)-'0')/fraction
+			fraction *= 10
 		}
-		if err == io.EOF {
-			l.tokenStream.Add(tokens.NewNum(value), l.errorState)
-			l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
-			return err
-		} else if err != nil {
+		if err != nil {
 			return err
 		}
-		if l.peek != '.' {
-			l.tokenStream.Add(tokens.NewNum(value), l.errorState)
-			return nil
-		} else {
-			realNumber := float64(value)
-			fraction := float64(10)
-			err = l.readch()
-			for ; l.peek > 47 && l.peek < 58 && err == nil; err = l.readch() {
-				realNumber = realNumber + (float64(l.peek)-'0')/fraction
-				fraction *= 10
-			}
-			if err == io.EOF {
-				l.tokenStream.Add(tokens.NewReal(realNumber), l.errorState)
-				l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
-				return err
-			} else if err != nil {
-				return err
-			}
-			l.tokenStream.Add(tokens.NewReal(realNumber), l.errorState)
-		}
+		l.tokenStream.Add(tokens.NewReal(realNumber), l.errorState)
 	}
 	return nil
 }
@@ -203,51 +207,120 @@ func (l *lexer) scanWords() error {
 		word string
 		err  error
 	)
-	if (l.peek > 64 && l.peek < 91) || (l.peek > 96 && l.peek < 123) {
-		for ; ((l.peek > 64 && l.peek < 91) || (l.peek > 96 && l.peek < 123) || (l.peek > 47 && l.peek < 58)) && err == nil; err = l.readch() {
-			word += string(l.peek)
+	for ; ((l.peek > 64 && l.peek < 91) || (l.peek > 96 && l.peek < 123) || (l.peek > 47 && l.peek < 58)) && err == nil; err = l.readch() {
+		word += string(l.peek)
+	}
+	if err != nil {
+		return err
+	}
+	lookup, ok := l.words.Get(word)
+	if ok {
+		l.tokenStream.Add(lookup.(tokens.IWord), l.errorState)
+		return nil
+	}
+	identifier := tokens.NewWord(word, tokens.ID)
+	l.words.Add(word, identifier)
+	l.tokenStream.Add(identifier, l.errorState)
+	return nil
+}
+
+func (l *lexer) scanComments() error {
+	var (
+		err error
+		ok  bool
+	)
+	if err = l.readch(); err != nil {
+		return err
+	}
+	if l.peek == '/' {
+		for ; (l.peek == '\n' || l.peek == 0) && err != nil; err = l.readch() {
 		}
-		if err == io.EOF {
-			lookup, ok := l.words.Get(word)
-			if ok {
-				l.tokenStream.Add(lookup.(tokens.IWord), l.errorState)
-				l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
-				return nil
-			}
-			identifier := tokens.NewWord(word, tokens.ID)
-			l.words.Add(word, identifier)
-			l.tokenStream.Add(identifier, l.errorState)
-			l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
-		} else if err != nil {
+		if err != nil {
 			return err
 		}
-		lookup, ok := l.words.Get(word)
-		if ok {
-			l.tokenStream.Add(lookup.(tokens.IWord), l.errorState)
-			return nil
+		if err = l.unreadch(); err != nil {
+			return err
 		}
-		identifier := tokens.NewWord(word, tokens.ID)
-		l.words.Add(word, identifier)
-		l.tokenStream.Add(identifier, l.errorState)
+	} else if l.peek == '*' {
+		for ; err != nil; err = l.readch() {
+			if l.peek == '\n' {
+				l.errorState.position++
+			} else if l.peek == '*' {
+				ok, err = l.readcch('/')
+				if ok || err != nil {
+					break
+				}
+			}
+		}
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func (l *lexer) Scan() (ts *TokenStream, e error) {
-	for err := *new(error); ; err = l.readch() {
+	var err error
+	for ; ; err = l.readch() {
 		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
-				return nil, err
-			}
+			return nil, err
+		} else if l.peek == '\x00' {
+			l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
+			break
 		}
-		if l.peek == '\n' {
+		switch {
+		// skip line breaks
+		case l.peek == '\n':
 			l.errorState.lineFeed = ""
 			l.errorState.position = 0
-			continue
+		// skip comments
+		case l.peek == '/':
+			err = l.scanComments()
+		// skip whitespaces
+		case l.peek == ' ', l.peek == '\t', l.peek == '\v', l.peek == '\r':
+		// read token ! or !=
+		case l.peek == '!':
+			err = l.scanCombinedTokens(l.peek, '=', language.Ne)
+		// read token ! or !=
+		case l.peek == '=':
+			err = l.scanCombinedTokens(l.peek, '=', language.Eq)
+		// read token < or <=
+		case l.peek == '<':
+			err = l.scanCombinedTokens(l.peek, '=', language.Le)
+		// read token > or >=
+		case l.peek == '>':
+			err = l.scanCombinedTokens(l.peek, '=', language.Ge)
+		// read token & or &&
+		case l.peek == '&':
+			err = l.scanCombinedTokens(l.peek, '&', language.BoolAnd)
+		// read token | or ||
+		case l.peek == '|':
+			err = l.scanCombinedTokens(l.peek, '|', language.BoolOr)
+		// read token ->
+		case l.peek == '-':
+			err = l.scanCombinedTokens(l.peek, '>', language.ReturnValue)
+		// read literals encapsulated in '' or ""
+		case l.peek == '\'', l.peek == '"':
+			err = l.scanLiterals(l.peek)
+		// read numbers
+		case l.peek > 47 && l.peek < 58:
+			if err = l.scanNumbers(); err != nil {
+				return nil, err
+			}
+			err = l.unreadch()
+		// read words
+		case (l.peek > 64 && l.peek < 91) || (l.peek > 96 && l.peek < 123):
+			if err = l.scanWords(); err != nil {
+				return nil, err
+			}
+			err = l.unreadch()
+		// read every token left
+		default:
+			l.tokenStream.Add(tokens.NewToken(int(l.peek)), l.errorState)
 		}
-		l.tokenStream.Add(tokens.NewToken(int(l.peek)), l.errorState)
+	}
+	if err != nil {
+		return nil, err
 	}
 	return l.tokenStream, nil
 }

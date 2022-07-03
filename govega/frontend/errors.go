@@ -4,6 +4,7 @@ import "fmt"
 
 const (
 	malformedCode                = "error parsing file, malformed"
+	unexpectedEOF                = "unexpected EOF"
 	literalNotTerminated         = "string literal not terminated"
 	invalidEscapeSequence        = "invalid escape squence"
 	invalidEscapeSequenceLiteral = "invalid escape sequence in literal"

@@ -1,6 +1,6 @@
-// Package dataStructs
+// Package frontend
 //
-// Data structures to assist in analysing the programming language
+// The compilers' frontend is responsible for validating and analysing the source programming language.
 //
 // tokenStream.go defines a stream of language tokens with is created during the lexical analyses and disected by the
 // parser to check for the correct language grammar
