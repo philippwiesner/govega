@@ -244,7 +244,7 @@ func (l *lexer) scanComments() error {
 	} else if l.peek == '*' {
 		for ; err != nil; err = l.readch() {
 			if l.peek == '\n' {
-				l.errorState.position++
+				l.errorState.lineNumber++
 			} else if l.peek == '*' {
 				ok, err = l.readcch('/')
 				if ok || err != nil {
