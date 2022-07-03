@@ -33,23 +33,20 @@ func TestNewLexer(t *testing.T) {
 	want := []rune{'1', '+', '1', '\n', '.'}
 	counter := 0
 	lexer := NewLexer([]byte(text), "test")
+	var err error
 
-	for {
-		if err := lexer.readch(); err != nil {
-			if err != nil {
-				if err == io.EOF {
-					break
-				} else {
-					t.Fatal(err)
-				}
-			}
+	err = lexer.readch()
+	for ; ; err = lexer.readch() {
+		if err != nil {
+			t.Error(err)
+		} else if lexer.peek == 0 {
+			break
 		}
 		if lexer.peek != want[counter] {
 			t.Fatalf("Char %v on position %v is not %v", lexer.peek, counter, want[counter])
 		}
 		counter++
 	}
-
 }
 
 func TestReadcch(t *testing.T) {

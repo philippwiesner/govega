@@ -98,7 +98,7 @@ func (l *lexer) scanLiterals(indicator rune) error {
 	l.tokenStream.Add(tokens.NewToken(int(indicator)), l.errorState)
 	err = l.readch()
 	for ; l.peek != indicator && err == nil; err = l.readch() {
-		if l.peek == '\n' || l.peek == '\x00' {
+		if l.peek == '\n' || l.peek == 0 {
 			return NewLexicalError(literalNotTerminated, l.errorState)
 		}
 		if l.peek == '\\' {
@@ -274,11 +274,11 @@ func (l *lexer) scanComments() error {
 
 // Scan public method to scan the actual source code and return a tokenStream with all scanned tokens
 func (l *lexer) Scan() (ts *TokenStream, e error) {
-	var err error
+	err := l.readch()
 	for ; ; err = l.readch() {
 		if err != nil {
 			return nil, err
-		} else if l.peek == '\x00' {
+		} else if l.peek == 0 {
 			l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
 			break
 		}
