@@ -14,14 +14,16 @@ import (
 	"io"
 )
 
+// lexer implements the lexer object
 type lexer struct {
-	errorState  ErrorState
-	peek        rune
-	code        *bytes.Reader
-	tokenStream *TokenStream
-	words       *helper.HashTable
+	errorState  ErrorState        // gives information when an error occures during lexical scanning
+	peek        rune              // holds the current scanned character
+	code        *bytes.Reader     // code to be analysed in memory
+	tokenStream *TokenStream      // stream of tokens returned by lexer
+	words       *helper.HashTable // collection of keywords and identifiers
 }
 
+// NewLexer creates a new lexer object
 func NewLexer(code []byte, fileName string) *lexer {
 	return &lexer{ErrorState{1, 0, fileName, ""},
 		0,
@@ -31,6 +33,7 @@ func NewLexer(code []byte, fileName string) *lexer {
 	}
 }
 
+// unreadch private method to put the last read character back on the code stream (revert previous readch)
 func (l *lexer) unreadch() error {
 	err := l.code.UnreadRune()
 	if err != nil {
@@ -42,6 +45,8 @@ func (l *lexer) unreadch() error {
 	return nil
 }
 
+// readch private method to retrieve one character from code stream.
+// update errorState for each new read character.
 func (l *lexer) readch() error {
 	ch, _, err := l.code.ReadRune()
 	l.errorState.position++
@@ -58,6 +63,7 @@ func (l *lexer) readch() error {
 	return nil
 }
 
+// readcch private method to read one character ahead and return true if it matches given character
 func (l *lexer) readcch(char rune) (bool, error) {
 	err := l.readch()
 	if l.peek != char {
@@ -67,6 +73,7 @@ func (l *lexer) readcch(char rune) (bool, error) {
 	return true, err
 }
 
+// scanCombinedTokens private method to scan tokens which are combined from two single tokes, e.g. == or !=
 func (l *lexer) scanCombinedTokens(fch rune, sch rune, word tokens.IWord) error {
 	ok, err := l.readcch(sch)
 	if err != nil {
@@ -80,6 +87,8 @@ func (l *lexer) scanCombinedTokens(fch rune, sch rune, word tokens.IWord) error 
 	return nil
 }
 
+// scanLiterals private method to scan all types of literals. Currently, supports only ASCII.
+// TODO: add UNICODE support
 func (l *lexer) scanLiterals(indicator rune) error {
 	var (
 		literal string
@@ -172,6 +181,7 @@ func (l *lexer) scanLiterals(indicator rune) error {
 	return nil
 }
 
+// scanNumbers private method to scan integer and floating point numbers
 func (l *lexer) scanNumbers() error {
 	var (
 		err   error
@@ -202,6 +212,8 @@ func (l *lexer) scanNumbers() error {
 	return nil
 }
 
+// scanWords private method to scan keywords and identifiers. new identifier are registered in words hashtable to be
+// recognized later
 func (l *lexer) scanWords() error {
 	var (
 		word string
@@ -224,6 +236,7 @@ func (l *lexer) scanWords() error {
 	return nil
 }
 
+// scanComments private method which skips all single and multi-line comments
 func (l *lexer) scanComments() error {
 	var (
 		err error
@@ -259,6 +272,7 @@ func (l *lexer) scanComments() error {
 	return nil
 }
 
+// Scan public method to scan the actual source code and return a tokenStream with all scanned tokens
 func (l *lexer) Scan() (ts *TokenStream, e error) {
 	var err error
 	for ; ; err = l.readch() {
