@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewArray(t *testing.T) {
-	a1 := NewArray(intType, 4)
+	a1 := NewArray(IntType, 4)
 	if a1.GetLexeme() != "[]" {
 		t.Fatalf("Want Array1 lexeme to be [], got: %v", a1.GetLexeme())
 	}
@@ -15,7 +15,7 @@ func TestNewArray(t *testing.T) {
 		t.Fatalf("Want Array1 width 16, got: %v", a1.GetWidth())
 	}
 
-	if a1.GetType() != intType {
+	if a1.GetType() != IntType {
 		t.Fatalf("Want Array1 type INT, got: %v", a1.GetType())
 	}
 
@@ -29,7 +29,7 @@ func TestNewArray(t *testing.T) {
 		t.Fatalf("Want Array2 width 16, got: %v", a2.GetWidth())
 	}
 
-	if a2.GetType() != intType {
+	if a2.GetType() != IntType {
 		t.Fatalf("Want Array2 type INT, got: %v", a2.GetType())
 	}
 
@@ -58,7 +58,7 @@ func TestNewString(t *testing.T) {
 		t.Fatalf("Want String1 width 16, got: %v", s1.GetWidth())
 	}
 
-	if s1.GetType() != charType {
+	if s1.GetType() != CharType {
 		t.Fatalf("Want String1 type char, got: %v", s1.GetType())
 	}
 }

@@ -28,10 +28,10 @@ func (t *BasicType) GetWidth() int {
 
 // Define basic data types: integer, float, char and bool
 var (
-	intType   = NewBasicType("int", tokens.BASIC, 4)
-	floatType = NewBasicType("float", tokens.BASIC, 8)
-	charType  = NewBasicType("char", tokens.BASIC, 8)
-	boolType  = NewBasicType("bool", tokens.BASIC, 1)
+	IntType   = NewBasicType("int", tokens.BASIC, 4)
+	FloatType = NewBasicType("float", tokens.BASIC, 8)
+	CharType  = NewBasicType("char", tokens.BASIC, 8)
+	BoolType  = NewBasicType("bool", tokens.BASIC, 1)
 )
 
 // ArrayType is the data type describing an array
@@ -90,5 +90,5 @@ type StringType struct {
 
 // NewString is the constructor for creating new strings with an array of the type CHAR
 func NewString(s int) *StringType {
-	return &StringType{NewArray(charType, s)}
+	return &StringType{NewArray(CharType, s)}
 }

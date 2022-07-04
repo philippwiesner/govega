@@ -246,7 +246,7 @@ func (l *lexer) scanComments() error {
 		return err
 	}
 	if l.peek == '/' {
-		for ; (l.peek == '\n' || l.peek == 0) && err != nil; err = l.readch() {
+		for ; l.peek != '\n' && l.peek != 0 && err == nil; err = l.readch() {
 		}
 		if err != nil {
 			return err
@@ -255,7 +255,7 @@ func (l *lexer) scanComments() error {
 			return err
 		}
 	} else if l.peek == '*' {
-		for ; err != nil; err = l.readch() {
+		for ; err == nil; err = l.readch() {
 			if l.peek == '\n' {
 				l.errorState.lineNumber++
 			} else if l.peek == '*' {
@@ -275,10 +275,8 @@ func (l *lexer) scanComments() error {
 // Scan public method to scan the actual source code and return a tokenStream with all scanned tokens
 func (l *lexer) Scan() (ts *TokenStream, e error) {
 	err := l.readch()
-	for ; ; err = l.readch() {
-		if err != nil {
-			return nil, err
-		} else if l.peek == 0 {
+	for ; err == nil; err = l.readch() {
+		if l.peek == 0 {
 			l.tokenStream.Add(tokens.NewToken(tokens.EOF), l.errorState)
 			break
 		}
@@ -287,6 +285,7 @@ func (l *lexer) Scan() (ts *TokenStream, e error) {
 		case l.peek == '\n':
 			l.errorState.lineFeed = ""
 			l.errorState.position = 0
+			l.errorState.lineNumber++
 		// skip comments
 		case l.peek == '/':
 			err = l.scanComments()
