@@ -6,16 +6,17 @@ import (
 )
 
 var (
-	ReturnValue         = tokens.NewWord("->", tokens.RETURNVALUE)
-	Eq                  = tokens.NewWord("<=", tokens.EQ)
-	Ne                  = tokens.NewWord("!=", tokens.NE)
-	Le                  = tokens.NewWord("<=", tokens.LE)
-	Ge                  = tokens.NewWord(">=", tokens.GE)
-	BoolAnd             = tokens.NewWord("&&", tokens.BOOLAND)
-	BoolOr              = tokens.NewWord("||", tokens.BOOLOR)
-	KeyWords            = initKeyWords()
-	EscapeHexaLiterals  = initHexaLiterals()
-	EscapeOctalLiterals = initOctalLiterals()
+	ReturnValue           = tokens.NewWord("->", tokens.RETURNVALUE)
+	Eq                    = tokens.NewWord("<=", tokens.EQ)
+	Ne                    = tokens.NewWord("!=", tokens.NE)
+	Le                    = tokens.NewWord("<=", tokens.LE)
+	Ge                    = tokens.NewWord(">=", tokens.GE)
+	BoolAnd               = tokens.NewWord("&&", tokens.BOOLAND)
+	BoolOr                = tokens.NewWord("||", tokens.BOOLOR)
+	KeyWords              = initKeyWords()
+	EscapeHexaLiterals    = initHexaLiterals()
+	EscapeOctalLiterals   = initOctalLiterals()
+	EscapeUnicodeLiterals = initUnicodeLiterals()
 )
 
 func initKeyWords() *helper.HashTable {
@@ -58,7 +59,7 @@ func initHexaLiterals() *helper.HashTable {
 	for i := 0; i < 16; i++ {
 		for j := 0; j < 16; j++ {
 			hexKey := string(alphabet[i]) + string(alphabet[j])
-			hexValue := rune(i*16 + j*1)
+			hexValue := rune(i*16 + j)
 			table.Add(hexKey, hexValue)
 		}
 	}
@@ -72,8 +73,25 @@ func initOctalLiterals() *helper.HashTable {
 		for j := 0; j < 8; j++ {
 			for k := 0; k < 8; k++ {
 				octKey := string(alphabet[i]) + string(alphabet[j]) + string(alphabet[k])
-				octValue := rune(i*8*8 + j*8 + k*1)
+				octValue := rune(i*8*8 + j*8 + k)
 				table.Add(octKey, octValue)
+			}
+		}
+	}
+	return table
+}
+
+func initUnicodeLiterals() *helper.HashTable {
+	table := helper.NewHashTable()
+	alphabet := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}
+	for i := 0; i < 16; i++ {
+		for j := 0; j < 16; j++ {
+			for k := 0; k < 16; k++ {
+				for l := 0; l < 16; l++ {
+					uniKey := string(alphabet[i]) + string(alphabet[j]) + string(alphabet[k]) + string(alphabet[l])
+					uniValue := rune(i*16*16*16 + j*16*16 + k*16 + l)
+					table.Add(uniKey, uniValue)
+				}
 			}
 		}
 	}

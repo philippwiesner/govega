@@ -87,3 +87,29 @@ func TestOctaLiterals(t *testing.T) {
 		}
 	}
 }
+
+func TestUnicodeLiterals(t *testing.T) {
+	tests := []struct {
+		in   string
+		want rune
+	}{
+		{"1234", rune(4660)},
+		{"af53", rune(44883)},
+		{"12ea", rune(4842)},
+	}
+
+	if EscapeUnicodeLiterals.BucketCount != 65536 {
+		t.Fatalf("Table should have 65535 entries, but it has: %v entries", EscapeUnicodeLiterals.BucketCount)
+	}
+
+	for i, tc := range tests {
+		unicode, ok := EscapeUnicodeLiterals.Get(tc.in)
+		if !ok {
+			t.Fatalf("test%d: Element %v not found", i, tc.in)
+		}
+		unicodeRune := unicode.(rune)
+		if unicodeRune != tc.want {
+			t.Fatalf("test%d: Want %v, but got %v", i, tc.want, unicodeRune)
+		}
+	}
+}

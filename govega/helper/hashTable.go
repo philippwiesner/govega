@@ -12,7 +12,7 @@ package helper
 //
 // hashFactor: prime to calculate hashing value
 var (
-	tableSize  uint = 16
+	tableSize  uint = 128
 	hashFactor uint = 31
 )
 

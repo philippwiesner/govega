@@ -151,6 +151,23 @@ func (l *lexer) scanLiterals(indicator rune) error {
 					return NewLexicalError(invalidEscapeSequenceHex, l.errorState)
 				}
 				char = hexLookup.(rune)
+			case 'u':
+				unicode := ""
+				for i := 0; i < 4; i++ {
+					err = l.readch()
+					if err != nil {
+						return NewLexicalError(invalidEscapeSequenceUnicode, l.errorState)
+					}
+					if l.peek > 64 && l.peek < 91 {
+						l.peek = l.peek + 32
+					}
+					unicode = unicode + string(l.peek)
+				}
+				unicodeLookup, ok := language.EscapeUnicodeLiterals.Get(unicode)
+				if !ok {
+					return NewLexicalError(invalidEscapeSequenceUnicode, l.errorState)
+				}
+				char = unicodeLookup.(rune)
 			case '0', '1', '2', '3':
 				oct := string(l.peek)
 				for i := 0; i < 2; i++ {

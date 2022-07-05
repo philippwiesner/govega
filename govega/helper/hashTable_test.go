@@ -46,8 +46,8 @@ func TestHashTable_Add(t *testing.T) {
 		in   []testBucket
 		want testWant
 	}{
-		{randomTestData(10), testWant{10, 16}},
-		{randomTestData(100), testWant{100, 32}},
+		{randomTestData(10), testWant{10, 128}},
+		{randomTestData(200), testWant{200, 128}},
 	}
 
 	for i, tc := range tests {

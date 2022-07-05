@@ -10,6 +10,7 @@ const (
 	invalidEscapeSequenceLiteral = "invalid escape sequence in literal"
 	invalidEscapeSequenceHex     = "invalid hexadecimal literal. must contain two digits between 00-FF"
 	invalidEscapeSequenceOct     = "invalid octal literal. must contain three digits between 000-377"
+	invalidEscapeSequenceUnicode = "invalid unicode literal. must contain four digits between 0000-FFFF"
 )
 
 type ErrorState struct {
