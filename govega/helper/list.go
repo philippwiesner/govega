@@ -25,6 +25,14 @@ func (n *Node) GetData() interface{} {
 	return n.data
 }
 
+func (n *Node) GetLast() *Node {
+	return n.last
+}
+
+func (n *Node) GetNext() *Node {
+	return n.next
+}
+
 // list is a basic List which stores nodes in a double linked list
 type list struct {
 	tail  *Node
@@ -58,20 +66,20 @@ func (l *list) GetCount() int {
 }
 
 // getHead private method for getting the first element in list
-func (l *list) getHead() interface{} {
+func (l *list) getHead() *Node {
 	if l.head == nil {
 		return nil
 	} else {
-		return l.head.GetData()
+		return l.head
 	}
 }
 
 // getTail private method for getting the last element in list
-func (l *list) getTail() interface{} {
+func (l *list) getTail() *Node {
 	if l.tail == nil {
 		return nil
 	} else {
-		return l.tail.GetData()
+		return l.tail
 	}
 }
 
@@ -123,12 +131,12 @@ func (s *Stack) Pop() (result interface{}, err error) {
 }
 
 // Top public getter method for getting the top element of the Stack
-func (s *Stack) Top() interface{} {
+func (s *Stack) Top() *Node {
 	return s.getHead()
 }
 
 // Bottom public getter method for getting the oldest element in the Stack
-func (s *Stack) Bottom() interface{} {
+func (s *Stack) Bottom() *Node {
 	return s.getTail()
 }
 
@@ -179,11 +187,11 @@ func (q *Queue) Remove() (result interface{}, err error) {
 }
 
 // Top public getter method for getting the oldest element in the Queue
-func (q *Queue) Top() interface{} {
+func (q *Queue) Top() *Node {
 	return q.getHead()
 }
 
 // Bottom public getter method for getting the newest element in the Queue
-func (q *Queue) Bottom() interface{} {
+func (q *Queue) Bottom() *Node {
 	return q.getTail()
 }

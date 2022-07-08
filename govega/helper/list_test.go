@@ -121,3 +121,8 @@ func TestQueueEmptyRemove(t *testing.T) {
 		t.Fatalf("error is not %v, but %v", EmptyQueueError, err)
 	}
 }
+
+func TestBla(t *testing.T) {
+	s := NewStack()
+	s.Top().GetLast().GetLast().GetNext().GetData()
+}
