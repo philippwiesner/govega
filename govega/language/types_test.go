@@ -19,7 +19,7 @@ func TestNewArray(t *testing.T) {
 		t.Fatalf("Want Array1 type INT, got: %v", a1.GetType())
 	}
 
-	a2 := NewArrayArray(a1, 5)
+	a2 := NewArray(a1, 5)
 
 	if a2.GetLexeme() != "[]" {
 		t.Fatalf("Want Array2 lexeme to be [], got: %v", a2.GetLexeme())
@@ -37,7 +37,7 @@ func TestNewArray(t *testing.T) {
 		t.Fatalf("Want Array2 dimensions to be {4, 5}, got: %v", a2.GetDimensions())
 	}
 
-	a3 := NewArrayArray(a2, 2)
+	a3 := NewArray(a2, 2)
 
 	if a3.GetWidth() != 160 {
 		t.Fatalf("Want Array3 width 160, got: %v", a3.GetWidth())
