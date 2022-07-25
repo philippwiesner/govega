@@ -20,7 +20,7 @@ var (
 )
 
 func initKeyWords() *helper.HashTable {
-	basicTypes := []*BasicType{IntType, FloatType, CharType, BoolType}
+	basicTypes := []IBasicType{IntType, FloatType, CharType, BoolType}
 	vocabulary := []tokens.IWord{
 		tokens.NewWord("str", tokens.TYPE),
 		tokens.NewWord("true", tokens.TRUE),
