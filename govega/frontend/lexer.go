@@ -88,7 +88,6 @@ func (l *lexer) scanCombinedTokens(fch rune, sch rune, word tokens.IWord) error 
 }
 
 // scanLiterals private method to scan all types of literals. Currently, supports only ASCII.
-// TODO: add UNICODE support
 func (l *lexer) scanLiterals(indicator rune) error {
 	var (
 		literal string
