@@ -362,10 +362,6 @@ func TestLexer_Scan(t *testing.T) {
 			t.Fatalf("%v: Linecount is not %v, got: %v", test, tc.lineNumber, lexer.errorState.lineNumber)
 		}
 
-		if ts.GetCount() != len(tc.want) {
-			t.Fatalf("%v: Token count is not %v, got: %v", test, tc.want, ts.GetCount())
-		}
-
 		for _, tok := range tc.want {
 			tokenInterface, err := ts.Remove()
 			if err != nil {

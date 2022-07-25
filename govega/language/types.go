@@ -14,10 +14,10 @@ type BasicType struct {
 	width        int // size of memory storage space
 }
 
-// NewBasicType is the constructor for new a BasicType
+// newBasicType is the constructor for new a BasicType
 //
 // Takes the name of the type, tag and memory storage space.
-func NewBasicType(varType string, tag int, width int) *BasicType {
+func newBasicType(varType string, tag int, width int) *BasicType {
 	return &BasicType{tokens.NewWord(varType, tag), width}
 }
 
@@ -45,26 +45,23 @@ type ArrayType struct {
 	dimensions []int
 }
 
-// NewArray is the constructor for a new one dimensional array
-func NewArray(t *BasicType, s int) *ArrayType {
-	arr := new(ArrayType)
-	arr.BasicType = NewBasicType("[]", tokens.INDEX, s*t.width)
-	arr.size = s
-	arr.arrayType = t
-	arr.dimensions = []int{s}
-	return arr
-}
-
-// NewArrayArray is the constructor for multidimensional arrays
+// newArray is the constructor for new array types.
 //
-// A new ArrayType is being created from the lexeme, tags and types of the old array but the memory space is
-// multiplicated with the new array size. Further the dimensions list is being extended with the new dimensions
-func NewArrayArray(a *ArrayType, s int) *ArrayType {
+// When creating multidimensional arrays the type of the given array is being used and the total size to be allocated
+// is multiplicated by the new and the old size. All array dimensions are stored in a list
+func newArray(t interface{}, s int) *ArrayType {
 	arr := new(ArrayType)
-	arr.BasicType = NewBasicType(a.GetLexeme(), a.GetTag(), s*a.GetWidth())
 	arr.size = s
-	arr.arrayType = a.arrayType
-	arr.dimensions = append(a.dimensions, s)
+	switch v := t.(type) {
+	case *BasicType:
+		arr.BasicType = newBasicType("[]", tokens.INDEX, s*v.width)
+		arr.arrayType = v
+		arr.dimensions = []int{s}
+	case *ArrayType:
+		arr.BasicType = newBasicType(v.GetLexeme(), v.GetTag(), s*v.GetWidth())
+		arr.arrayType = v.arrayType
+		arr.dimensions = append(v.dimensions, s)
+	}
 	return arr
 }
 
@@ -88,7 +85,7 @@ type StringType struct {
 	*ArrayType
 }
 
-// NewString is the constructor for creating new strings with an array of the type CHAR
-func NewString(s int) *StringType {
-	return &StringType{NewArray(CharType, s)}
+// newString is the constructor for creating new strings with an array of the type CHAR
+func newString(s int) *StringType {
+	return &StringType{newArray(CharType, s)}
 }

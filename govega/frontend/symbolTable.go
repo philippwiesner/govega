@@ -8,22 +8,23 @@ import (
 
 type SymbolTable struct {
 	*helper.HashTable
+	name          string
 	previousScope *SymbolTable
 }
 
+func (st *SymbolTable) GetName() string {
+	return st.name
+}
+
 type Symbol struct {
-	name     string
-	BaseType *language.BasicType
-	Callable bool
-	Const    bool
+	name       string
+	SymbolType language.IBasicType
+	Callable   bool
+	Const      bool
 }
 
-func NewTable() *SymbolTable {
-	return &SymbolTable{helper.NewHashTable(), nil}
-}
-
-func (st *SymbolTable) NewScope() *SymbolTable {
-	return &SymbolTable{helper.NewHashTable(), st}
+func NewScope(name string, st *SymbolTable) *SymbolTable {
+	return &SymbolTable{helper.NewHashTable(), name, st}
 }
 
 func (st *SymbolTable) LeaveScope() (symbolTable *SymbolTable, err error) {
@@ -33,8 +34,8 @@ func (st *SymbolTable) LeaveScope() (symbolTable *SymbolTable, err error) {
 	return st.previousScope, nil
 }
 
-func NewSymbolEntry(name string, baseType *language.BasicType, callable bool, con bool) *Symbol {
-	return &Symbol{name, baseType, callable, con}
+func NewSymbolEntry(name string, varType language.IBasicType, callable bool, con bool) *Symbol {
+	return &Symbol{name, varType, callable, con}
 }
 
 func (st *SymbolTable) NewEntry(entry *Symbol) {
