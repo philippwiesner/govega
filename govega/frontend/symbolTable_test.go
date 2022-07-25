@@ -58,9 +58,7 @@ func TestNewScope(t *testing.T) {
 		t.Fatalf("Element var4 not found")
 	}
 
-	stringType := var4.SymbolType.(language.IStringType)
-
-	if stringType.GetLexeme() != "[]" || stringType.GetType() != language.CharType || var4.Callable != true || var4.Const != false {
+	if var4.SymbolType.(*language.StringType) == language.NewString(6) || var4.Callable != true || var4.Const != false {
 		t.Fatalf("var4 not as it should be, got: %v", var4)
 	}
 
