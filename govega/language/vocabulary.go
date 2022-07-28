@@ -1,3 +1,9 @@
+// Package language
+//
+// Defines basic language structures which can be used in the frontend to parse the language
+//
+// vocabulary.go defines language vocabulary and functions to check if special characters are in the language alphabet
+
 package language
 
 import (
@@ -5,6 +11,7 @@ import (
 	"govega/govega/language/tokens"
 )
 
+// define special combined tokens, keywords and special escaped characters to be used by the lexer
 var (
 	ReturnType            = tokens.NewWord("->", tokens.RETURNTYPE)
 	Eq                    = tokens.NewWord("<=", tokens.EQ)
@@ -14,11 +21,12 @@ var (
 	BoolAnd               = tokens.NewWord("&&", tokens.BOOLAND)
 	BoolOr                = tokens.NewWord("||", tokens.BOOLOR)
 	KeyWords              = initKeyWords()
-	EscapeHexaLiterals    = initHexaLiterals()
-	EscapeOctalLiterals   = initOctalLiterals()
-	EscapeUnicodeLiterals = initUnicodeLiterals()
+	EscapeHexaLiterals    = initHexadecimalChars()
+	EscapeOctalLiterals   = initOctalChars()
+	EscapeUnicodeLiterals = initUnicodeChars()
 )
 
+// initKeyWords creates a new lookup Hashtable containing all the keywords of the language
 func initKeyWords() *helper.HashTable {
 	basicTypes := []IBasicType{IntType, FloatType, CharType, BoolType}
 	vocabulary := []tokens.IWord{
@@ -53,7 +61,10 @@ func initKeyWords() *helper.HashTable {
 	return table
 }
 
-func initHexaLiterals() *helper.HashTable {
+// initHexadecimalChars creates a lookup Hashtable for all hexadecimal escaped characters.
+//
+// valid hexadecimal escape sequences are \x00 - \xff. Uppercase will automatically be converted to lowercase.
+func initHexadecimalChars() *helper.HashTable {
 	table := helper.NewHashTable()
 	alphabet := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}
 	for i := 0; i < 16; i++ {
@@ -66,7 +77,10 @@ func initHexaLiterals() *helper.HashTable {
 	return table
 }
 
-func initOctalLiterals() *helper.HashTable {
+// initOctalChars creates a lookup Hashtable for all octal escaped characters.
+//
+// valid octal escape sequences are \o000 - \0377.
+func initOctalChars() *helper.HashTable {
 	table := helper.NewHashTable()
 	alphabet := []rune{'0', '1', '2', '3', '4', '5', '6', '7'}
 	for i := 0; i < 4; i++ {
@@ -81,7 +95,10 @@ func initOctalLiterals() *helper.HashTable {
 	return table
 }
 
-func initUnicodeLiterals() *helper.HashTable {
+// initUnicodeChars creates a lookup Hashtable for all unicode escaped characters.
+//
+// valid unicode escape sequences are \u0000 - \uffff. Uppercase will automatically be converted to lowercase.
+func initUnicodeChars() *helper.HashTable {
 	table := helper.NewHashTable()
 	alphabet := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}
 	for i := 0; i < 16; i++ {

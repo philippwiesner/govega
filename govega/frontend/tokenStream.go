@@ -11,7 +11,7 @@ import (
 	"io"
 )
 
-// TokenBucket stores an tokens.IToken interface as a token the code line the token occures
+// TokenBucket stores the token, an errorState and can be linked to the last element creating a queue
 type TokenBucket struct {
 	token      tokens.IToken
 	errorState ErrorState
@@ -43,7 +43,7 @@ func (tb *TokenBucket) GetTokenLine() int {
 	return tb.errorState.lineNumber
 }
 
-// TokenStream implements a token stream
+// TokenStream implements a token stream as a single linked queue
 type TokenStream struct {
 	tail *TokenBucket
 	head *TokenBucket
@@ -54,14 +54,17 @@ func NewTokenStream() *TokenStream {
 	return &TokenStream{}
 }
 
+// IsEmpty verifies if the TokenStream is empty or not
 func (ts *TokenStream) IsEmpty() bool {
 	return ts.tail == nil && ts.head == nil
 }
 
+// GetTail is the public getter method for getting the newest element of the TokenStream
 func (ts *TokenStream) GetTail() *TokenBucket {
 	return ts.tail
 }
 
+// GetHead is the public getter method for getting the oldes element of the TokenStream
 func (ts *TokenStream) GetHead() *TokenBucket {
 	return ts.head
 }

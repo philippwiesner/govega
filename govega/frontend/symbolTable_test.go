@@ -18,15 +18,15 @@ func TestNewScope(t *testing.T) {
 	table := NewSymbolTable()
 	table.NewScope("main")
 
-	if table.GetScopeName() != "main" {
-		t.Fatalf("Name of scope not main, got: %v", table.GetScopeName())
+	if table.getScopeName() != "main" {
+		t.Fatalf("Name of scope not main, got: %v", table.getScopeName())
 	}
 
 	for _, s := range inMain {
 		table.Add(s)
 	}
 
-	var1, ok := table.LookUp("var1")
+	var1, ok := table.Lookup("var1")
 	if !ok {
 		t.Fatalf("Element var1 not found")
 	}
@@ -37,15 +37,15 @@ func TestNewScope(t *testing.T) {
 
 	table.NewScope("Sub")
 
-	if table.GetScopeName() != "Sub" {
-		t.Fatalf("Name of scope not sub, got: %v", table.GetScopeName())
+	if table.getScopeName() != "Sub" {
+		t.Fatalf("Name of scope not sub, got: %v", table.getScopeName())
 	}
 
 	for _, s := range inSub {
 		table.Add(s)
 	}
 
-	var2, ok := table.LookUp("var2")
+	var2, ok := table.Lookup("var2")
 	if !ok {
 		t.Fatalf("Element var2 not found")
 	}
@@ -54,7 +54,7 @@ func TestNewScope(t *testing.T) {
 		t.Fatalf("var2 not as it should be, got: %v", var2)
 	}
 
-	var4, ok := table.LookUp("var4")
+	var4, ok := table.Lookup("var4")
 	if !ok {
 		t.Fatalf("Element var4 not found")
 	}
@@ -66,11 +66,11 @@ func TestNewScope(t *testing.T) {
 	// leave sub scope, and try to lookup again var in main scope and see if element cannot be found in sub scope
 	table.LeaveScope()
 
-	if table.GetScopeName() != "main" {
-		t.Fatalf("Name of scope not main, got: %v", table.GetScopeName())
+	if table.getScopeName() != "main" {
+		t.Fatalf("Name of scope not main, got: %v", table.getScopeName())
 	}
 
-	var1, ok = table.LookUp("var1")
+	var1, ok = table.Lookup("var1")
 	if !ok {
 		t.Fatalf("Element var1 not found")
 	}
@@ -79,7 +79,7 @@ func TestNewScope(t *testing.T) {
 		t.Fatalf("var1 not as it should be, got: %v", var1)
 	}
 
-	var4, ok = table.LookUp("var4")
+	var4, ok = table.Lookup("var4")
 	if ok {
 		t.Fatalf("Element var4 found, but shouldn't as scope left")
 	}

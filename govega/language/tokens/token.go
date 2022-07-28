@@ -58,6 +58,7 @@ func (t *token) GetTag() int {
 	return t.tag
 }
 
+// String print token as string
 func (t *token) String() string {
 	return fmt.Sprintf("%v", t.tag)
 }
@@ -80,6 +81,7 @@ func (n *num) GetValue() int {
 	return n.value
 }
 
+// String print num as string
 func (n *num) String() string {
 	return fmt.Sprintf("%v", n.value)
 }
@@ -103,6 +105,7 @@ func (w *word) GetLexeme() string {
 	return w.lexeme
 }
 
+// String print word as string
 func (w *word) String() string {
 	return w.lexeme
 }
@@ -123,6 +126,7 @@ func (r *realNumber) GetValue() float64 {
 	return r.value
 }
 
+// String print realNumber as string
 func (r *realNumber) String() string {
 	return fmt.Sprintf("%v", r.value)
 }
@@ -143,6 +147,7 @@ func (l *literal) GetContent() string {
 	return l.content
 }
 
+// String print literal as string
 func (l *literal) String() string {
 	return l.content
 }

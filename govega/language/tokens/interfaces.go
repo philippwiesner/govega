@@ -8,8 +8,8 @@ package tokens
 
 // IToken interface to retrieve tag for all token implementations
 type IToken interface {
-	GetTag() int
-	String() string
+	GetTag() int    // integer representation of token for comparison
+	String() string // string representation of token for error output
 }
 
 // NewToken generates new IToken interface based on token struct

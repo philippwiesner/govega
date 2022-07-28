@@ -65,7 +65,7 @@ func (pa *parserObject) matchToken(tag int) error {
 }
 
 func (pa *parserObject) alreadyDeclared(identifier string) error {
-	_, ok := pa.table.LookUp(identifier)
+	_, ok := pa.table.Lookup(identifier)
 	if ok {
 		return NewDeclarationError(alreadyDefined, pa.errorState)
 	}
