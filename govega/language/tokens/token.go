@@ -6,39 +6,41 @@
 
 package tokens
 
+import "fmt"
+
 // token tag constants for identifying tokens. numbering start at 256 as the integers 0-255 represent runes (chars)
 const (
-	EOF         int = iota + 256 // end of file
-	EQ                           // ==
-	LE                           // <=
-	GE                           // >=
-	NE                           // !=
-	CONST                        // const
-	FUNC                         // func
-	WHILE                        // while
-	IF                           // if
-	ELIF                         // elif
-	ELSE                         // else
-	RETURNVALUE                  // ->
-	RETURN                       // return
-	PASS                         // pass
-	CONTINUE                     // continue
-	BREAK                        // break
-	TRUE                         // true
-	FALSE                        // false
-	NOT                          // not
-	AND                          // and
-	BOOLAND                      // &&
-	OR                           // or
-	BOOLOR                       // ||
-	INDEX                        // [i]
-	ID                           // identifier
-	BASIC                        // basic data type (e.g. int, char)
-	FUNCTION                     // function identifier
-	TYPE                         // non-basic data types (e.g. string, array)
-	NUM                          // normal numbers (int)
-	REAL                         // real numbers (floating point)
-	LITERAL                      // everything enclosed in '' or ""
+	EOF        int = iota + 256 // end of file
+	EQ                          // ==
+	LE                          // <=
+	GE                          // >=
+	NE                          // !=
+	CONST                       // const
+	FUNC                        // func
+	WHILE                       // while
+	IF                          // if
+	ELIF                        // elif
+	ELSE                        // else
+	RETURNTYPE                  // ->
+	RETURN                      // return
+	PASS                        // pass
+	CONTINUE                    // continue
+	BREAK                       // break
+	TRUE                        // true
+	FALSE                       // false
+	NOT                         // not
+	AND                         // and
+	BOOLAND                     // &&
+	OR                          // or
+	BOOLOR                      // ||
+	INDEX                       // [i]
+	ID                          // identifier
+	BASIC                       // basic data type (e.g. int, char)
+	FUNCTION                    // function identifier
+	TYPE                        // non-basic data types (e.g. string, array)
+	NUM                         // normal numbers (int)
+	REAL                        // real numbers (floating point)
+	LITERAL                     // everything enclosed in '' or ""
 )
 
 // token struct represents simple basic language tokens identified by an integer number
@@ -54,6 +56,10 @@ func newToken(t int) *token {
 // GetTag public getter method for getting the tag
 func (t *token) GetTag() int {
 	return t.tag
+}
+
+func (t *token) String() string {
+	return fmt.Sprintf("%v", t.tag)
 }
 
 // num is a numeric tokens
@@ -72,6 +78,10 @@ func newNum(v int) *num {
 // GetValue public getter method for retrieving the numeric tokens value
 func (n *num) GetValue() int {
 	return n.value
+}
+
+func (n *num) String() string {
+	return fmt.Sprintf("%v", n.value)
 }
 
 // word is a word token
@@ -93,6 +103,10 @@ func (w *word) GetLexeme() string {
 	return w.lexeme
 }
 
+func (w *word) String() string {
+	return w.lexeme
+}
+
 // realNumber is a floating point number token
 type realNumber struct {
 	*token
@@ -109,6 +123,10 @@ func (r *realNumber) GetValue() float64 {
 	return r.value
 }
 
+func (r *realNumber) String() string {
+	return fmt.Sprintf("%v", r.value)
+}
+
 // literal is a literal tokens (everything enclosed in '' or "")
 type literal struct {
 	*token
@@ -122,5 +140,9 @@ func newLiteral(c string) *literal {
 
 // GetContent public getter method for the literal content
 func (l *literal) GetContent() string {
+	return l.content
+}
+
+func (l *literal) String() string {
 	return l.content
 }

@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ReturnValue           = tokens.NewWord("->", tokens.RETURNVALUE)
+	ReturnType            = tokens.NewWord("->", tokens.RETURNTYPE)
 	Eq                    = tokens.NewWord("<=", tokens.EQ)
 	Ne                    = tokens.NewWord("!=", tokens.NE)
 	Le                    = tokens.NewWord("<=", tokens.LE)

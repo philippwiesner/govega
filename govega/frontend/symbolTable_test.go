@@ -7,22 +7,23 @@ import (
 
 func TestNewScope(t *testing.T) {
 	inMain := []*Symbol{
-		NewSymbolEntry("var1", language.IntType, false, false),
-		NewSymbolEntry("var2", language.CharType, false, true),
+		NewSymbol("var1", language.IntType, false, false),
+		NewSymbol("var2", language.CharType, false, true),
 	}
 	inSub := []*Symbol{
-		NewSymbolEntry("var3", language.FloatType, false, false),
-		NewSymbolEntry("var4", language.NewString(6), true, false),
+		NewSymbol("var3", language.FloatType, false, false),
+		NewSymbol("var4", language.NewString(6), true, false),
 	}
 
-	table := NewScope("main", nil)
+	table := NewSymbolTable()
+	table.NewScope("main")
 
-	if table.GetName() != "main" {
-		t.Fatalf("Name of scope not main, got: %v", table.GetName())
+	if table.GetScopeName() != "main" {
+		t.Fatalf("Name of scope not main, got: %v", table.GetScopeName())
 	}
 
 	for _, s := range inMain {
-		table.NewEntry(s)
+		table.Add(s)
 	}
 
 	var1, ok := table.LookUp("var1")
@@ -34,14 +35,14 @@ func TestNewScope(t *testing.T) {
 		t.Fatalf("var1 not as it should be, got: %v", var1)
 	}
 
-	table = NewScope("Sub", table)
+	table.NewScope("Sub")
 
-	if table.GetName() != "Sub" {
-		t.Fatalf("Name of scope not sub, got: %v", table.GetName())
+	if table.GetScopeName() != "Sub" {
+		t.Fatalf("Name of scope not sub, got: %v", table.GetScopeName())
 	}
 
 	for _, s := range inSub {
-		table.NewEntry(s)
+		table.Add(s)
 	}
 
 	var2, ok := table.LookUp("var2")
@@ -63,13 +64,10 @@ func TestNewScope(t *testing.T) {
 	}
 
 	// leave sub scope, and try to lookup again var in main scope and see if element cannot be found in sub scope
-	table, err := table.LeaveScope()
-	if err != nil {
-		t.Errorf("TestNewScope: %v", err)
-	}
+	table.LeaveScope()
 
-	if table.GetName() != "main" {
-		t.Fatalf("Name of scope not main, got: %v", table.GetName())
+	if table.GetScopeName() != "main" {
+		t.Fatalf("Name of scope not main, got: %v", table.GetScopeName())
 	}
 
 	var1, ok = table.LookUp("var1")

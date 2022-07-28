@@ -327,7 +327,7 @@ func (l *lexer) Scan() (ts *TokenStream, e error) {
 			err = l.scanCombinedTokens(l.peek, '|', language.BoolOr)
 		// read token ->
 		case l.peek == '-':
-			err = l.scanCombinedTokens(l.peek, '>', language.ReturnValue)
+			err = l.scanCombinedTokens(l.peek, '>', language.ReturnType)
 		// read literals encapsulated in '' or ""
 		case l.peek == '\'', l.peek == '"':
 			err = l.scanLiterals(l.peek)

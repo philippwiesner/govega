@@ -338,7 +338,7 @@ func TestLexer_Scan(t *testing.T) {
 				tokens.NewWord("test", tokens.ID),
 				tokens.NewToken('('),
 				tokens.NewToken(')'),
-				language.ReturnValue,
+				language.ReturnType,
 				language.BoolType,
 				tokens.NewToken('{'),
 				tokens.NewWord("return", tokens.RETURN),

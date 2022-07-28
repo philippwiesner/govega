@@ -9,6 +9,7 @@ package tokens
 // IToken interface to retrieve tag for all token implementations
 type IToken interface {
 	GetTag() int
+	String() string
 }
 
 // NewToken generates new IToken interface based on token struct

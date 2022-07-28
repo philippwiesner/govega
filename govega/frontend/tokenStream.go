@@ -7,8 +7,8 @@
 package frontend
 
 import (
-	"errors"
 	"govega/govega/language/tokens"
+	"io"
 )
 
 // TokenBucket stores an tokens.IToken interface as a token the code line the token occures
@@ -36,6 +36,11 @@ func (tb *TokenBucket) GetErrorState() *ErrorState {
 // GetTokenTag getter method to retrieve the token tag
 func (tb *TokenBucket) GetTokenTag() int {
 	return tb.GetToken().GetTag()
+}
+
+// GetTokenLine getter method to retrieve token occurence
+func (tb *TokenBucket) GetTokenLine() int {
+	return tb.errorState.lineNumber
 }
 
 // TokenStream implements a token stream
@@ -77,7 +82,7 @@ func (ts *TokenStream) Add(token tokens.IToken, state ErrorState) {
 // Remove the top element from the token stream
 func (ts *TokenStream) Remove() (TokenBucket *TokenBucket, err error) {
 	if ts.IsEmpty() {
-		return nil, errors.New("can't remove from empty list")
+		return nil, io.EOF
 	}
 	head := ts.head
 	ts.head = head.last

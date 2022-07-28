@@ -11,6 +11,8 @@ const (
 	invalidEscapeSequenceHex     = "invalid hexadecimal literal. must contain two digits between 00-FF"
 	invalidEscapeSequenceOct     = "invalid octal literal. must contain three digits between 000-377"
 	invalidEscapeSequenceUnicode = "invalid unicode literal. must contain four digits between 0000-FFFF"
+	invalidSyntax                = "invalid Syntax"
+	alreadyDefined               = "identifier already defined"
 )
 
 type ErrorState struct {

@@ -1,19 +1,46 @@
 package frontend
 
 import (
-	"errors"
 	"govega/govega/helper"
 	"govega/govega/language"
 )
 
-type SymbolTable struct {
+type scope struct {
 	*helper.HashTable
 	name          string
-	previousScope *SymbolTable
+	previousScope *scope
 }
 
-func (st *SymbolTable) GetName() string {
-	return st.name
+func newScope(name string) *scope {
+	return &scope{helper.NewHashTable(), name, nil}
+}
+
+type SymbolTable struct {
+	head *scope
+	tail *scope
+}
+
+func NewSymbolTable() *SymbolTable {
+	globalScope := newScope("global")
+	return &SymbolTable{globalScope, globalScope}
+}
+
+func (st *SymbolTable) NewScope(name string) {
+	newScope := newScope(name)
+	old := st.head
+	st.head = newScope
+	newScope.previousScope = old
+}
+
+func (st *SymbolTable) LeaveScope() {
+	if st.GetScopeName() != "global" {
+		newHead := st.head.previousScope
+		st.head = newHead
+	}
+}
+
+func (st *SymbolTable) GetScopeName() string {
+	return st.head.name
 }
 
 type Symbol struct {
@@ -23,34 +50,23 @@ type Symbol struct {
 	Const      bool
 }
 
-func NewScope(name string, st *SymbolTable) *SymbolTable {
-	return &SymbolTable{helper.NewHashTable(), name, st}
-}
-
-func (st *SymbolTable) LeaveScope() (symbolTable *SymbolTable, err error) {
-	if st.previousScope == nil {
-		return nil, errors.New("already last scope")
-	}
-	return st.previousScope, nil
-}
-
-func NewSymbolEntry(name string, varType language.IBasicType, callable bool, con bool) *Symbol {
+func NewSymbol(name string, varType language.IBasicType, callable bool, con bool) *Symbol {
 	return &Symbol{name, varType, callable, con}
 }
 
-func (st *SymbolTable) NewEntry(entry *Symbol) {
-	st.Add(entry.name, entry)
+func (st *SymbolTable) Add(s *Symbol) {
+	st.head.Add(s.name, s)
 }
 
 func (st *SymbolTable) LookUp(name string) (entry *Symbol, ok bool) {
-	table := st
+	currentScope := st.head
 	for {
-		result, ok := table.Get(name)
+		result, ok := currentScope.Get(name)
 		if !ok {
-			if table.previousScope == nil {
+			if currentScope.previousScope == nil {
 				return nil, false
 			} else {
-				table = table.previousScope
+				currentScope = currentScope.previousScope
 			}
 		} else {
 			return result.(*Symbol), true
