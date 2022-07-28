@@ -38,3 +38,37 @@ func (l *LexicalError) Error() string {
 func (l LexicalError) String() string {
 	return l.Error()
 }
+
+type SyntaxError struct {
+	msg string
+	ErrorState
+}
+
+func NewSyntaxError(msg string, state ErrorState) *SyntaxError {
+	return &SyntaxError{msg, state}
+}
+
+func (s *SyntaxError) Error() string {
+	return fmt.Sprintf("%v:%d: Syntax Error: %v", s.fileName, s.lineNumber, s.msg)
+}
+
+func (s *SyntaxError) String() string {
+	return s.Error()
+}
+
+type DeclarationError struct {
+	msg string
+	ErrorState
+}
+
+func NewDeclarationError(msg string, state ErrorState) *DeclarationError {
+	return &DeclarationError{msg, state}
+}
+
+func (s *DeclarationError) Error() string {
+	return fmt.Sprintf("%v:%d: Declaration Error: %v", s.fileName, s.lineNumber, s.msg)
+}
+
+func (s *DeclarationError) String() string {
+	return s.Error()
+}
