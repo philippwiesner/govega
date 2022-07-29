@@ -17,21 +17,21 @@ func newScope(name string) *scope {
 	return &scope{helper.NewHashTable(), name, nil}
 }
 
-// SymbolTable defines a lookup table for symbols. The table can store multiple tables linkes as a stack to lookup data
+// symbolTable defines a lookup table for symbols. The table can store multiple tables linkes as a stack to lookup data
 // from previous tables and remove unneeded tables when the scope is left.
-type SymbolTable struct {
+type symbolTable struct {
 	head *scope
 	tail *scope
 }
 
-// NewSymbolTable creates a new SymbolTable and adds a global scope
-func NewSymbolTable() *SymbolTable {
+// NewSymbolTable creates a new symbolTable and adds a global scope
+func NewSymbolTable() *symbolTable {
 	globalScope := newScope("global")
-	return &SymbolTable{globalScope, globalScope}
+	return &symbolTable{globalScope, globalScope}
 }
 
 // NewScope adds a new scope on top of the SymbolTables last scope
-func (st *SymbolTable) NewScope(name string) {
+func (st *symbolTable) NewScope(name string) {
 	newScope := newScope(name)
 	old := st.head
 	st.head = newScope
@@ -39,7 +39,7 @@ func (st *SymbolTable) NewScope(name string) {
 }
 
 // LeaveScope removed the current scope from the table
-func (st *SymbolTable) LeaveScope() {
+func (st *symbolTable) LeaveScope() {
 	if st.getScopeName() != "global" {
 		newHead := st.head.previousScope
 		st.head = newHead
@@ -47,7 +47,7 @@ func (st *SymbolTable) LeaveScope() {
 }
 
 // getScopeName returnes the name of the current scope (mainly for debugging and testing)
-func (st *SymbolTable) getScopeName() string {
+func (st *symbolTable) getScopeName() string {
 	return st.head.name
 }
 
@@ -64,14 +64,14 @@ func NewSymbol(name string, varType language.IBasicType, callable bool, con bool
 	return &Symbol{name, varType, callable, con}
 }
 
-// Add adds a new symbol to the current scope of the SymbolTable
-func (st *SymbolTable) Add(s *Symbol) {
+// Add adds a new symbol to the current scope of the symbolTable
+func (st *symbolTable) Add(s *Symbol) {
 	st.head.Add(s.name, s)
 }
 
 // Lookup searches if the given symbol can already be found in the current or any previous scopes. Returns also a
 // boolean if a symbol is being found or not.
-func (st *SymbolTable) Lookup(name string) (entry *Symbol, ok bool) {
+func (st *symbolTable) Lookup(name string) (entry *Symbol, ok bool) {
 	currentScope := st.head
 	for {
 		result, ok := currentScope.Get(name)

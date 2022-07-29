@@ -30,7 +30,11 @@ func TestParseBlock(t *testing.T) {
 	tokenStream.Add(tokens.NewToken('('), ErrorState{})
 	tokenStream.Add(tokens.NewToken(')'), ErrorState{})
 	tokenStream.Add(language.ReturnType, ErrorState{})
-	tokenStream.Add(language.BoolType, ErrorState{})
+	tokenStream.Add(tokens.NewWord("func", tokens.FUNC), ErrorState{})
+	tokenStream.Add(tokens.NewWord("bla", tokens.ID), ErrorState{})
+	tokenStream.Add(tokens.NewToken('('), ErrorState{})
+	tokenStream.Add(tokens.NewToken(')'), ErrorState{})
+	tokenStream.Add(language.ReturnType, ErrorState{})
 	tokenStream.Add(tokens.NewToken(tokens.EOF), ErrorState{})
 
 	var mockParser Parser = &mockBlockParser{

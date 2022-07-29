@@ -36,7 +36,6 @@ const (
 	INDEX                       // [i]
 	ID                          // identifier
 	BASIC                       // basic data type (e.g. int, char)
-	FUNCTION                    // function identifier
 	TYPE                        // non-basic data types (e.g. string, array)
 	NUM                         // normal numbers (int)
 	REAL                        // real numbers (floating point)
