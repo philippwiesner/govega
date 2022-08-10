@@ -72,3 +72,16 @@ func (s *DeclarationError) Error() string {
 func (s *DeclarationError) String() string {
 	return s.Error()
 }
+
+type VegaError struct {
+	msg string
+	ErrorState
+}
+
+func NewVegaError(msg string, state ErrorState) *VegaError {
+	return &VegaError{msg, state}
+}
+
+func (v *VegaError) String() string {
+	return fmt.Sprintf("%v:%d: Syntax Error: %v\n", v.fileName, v.lineNumber, v.msg)
+}

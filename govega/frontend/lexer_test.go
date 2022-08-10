@@ -329,7 +329,7 @@ func TestLexer_Scan(t *testing.T) {
 		want       []interface{}
 	}{
 		{"// test function\n" +
-			"func test() -> bool {\n" +
+			"func test() bool {\n" +
 			"\t    return true;\n" +
 			"}",
 			4,
@@ -338,7 +338,6 @@ func TestLexer_Scan(t *testing.T) {
 				tokens.NewWord("test", tokens.ID),
 				tokens.NewToken('('),
 				tokens.NewToken(')'),
-				language.ReturnType,
 				language.BoolType,
 				tokens.NewToken('{'),
 				tokens.NewWord("return", tokens.RETURN),

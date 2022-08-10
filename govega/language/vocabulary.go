@@ -13,7 +13,6 @@ import (
 
 // define special combined tokens, keywords and special escaped characters to be used by the lexer
 var (
-	ReturnType            = tokens.NewWord("->", tokens.RETURNTYPE)
 	Eq                    = tokens.NewWord("<=", tokens.EQ)
 	Ne                    = tokens.NewWord("!=", tokens.NE)
 	Le                    = tokens.NewWord("<=", tokens.LE)

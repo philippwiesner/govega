@@ -1,7 +1,7 @@
 grammar Vega;
 
 block
-    :   (FUNC ID LBRACKET functionParameterDeclaration? RBRACKET RETURN_VALUE functionReturnType scopeStatement)+ EOF
+    :   (FUNC ID LBRACKET functionParameterDeclaration? RBRACKET functionReturnType scopeStatement)+ EOF
     ;
 
 functionParameterDeclaration
@@ -9,7 +9,7 @@ functionParameterDeclaration
     ;
 
 functionParameterDefinition
-    :   ID COLON variableType (ASSIGN expression)?
+    :   terminalVariableType (arrayDeclaration)* ID
     ;
 
 functionReturnType
@@ -21,38 +21,18 @@ scopeStatement
     ;
 
 statement
-	:	(identifierStatement DELIMITER
-	|   returnStatement DELIMITER
+	:	(CONST? terminalVariableType arrayDeclaration* ID (COMMA ID)* (ASSIGN expression)? DELIMITER
+	|   ID arrayAccess* (COMMA ID arrayAccess* )* ASSIGN expression DELIMITER
+	|   RETURN expression DELIMITER
 	|   CONTINUE DELIMITER
 	|   BREAK DELIMITER
-	|	whileStatement
-	|	ifStatement
-	|	block)+
-	|   PASS DELIMITER
+	|	WHILE conditionalScope
+	|	IF conditionalScope (ELIF conditionalScope)* (ELSE scopeStatement)?
+	|   PASS DELIMITER)+
 	;
 
-identifierStatement
-    :   ID (declarationStatement | assignStatement | funcCall)
-    ;
-
-declarationStatement
-    :   (COMMA ID)* COLON (CONST)? variableType (ASSIGN expression)?
-    ;
-
-assignStatement
-	:   (arrayAccess)? ASSIGN expression
-    ;
-
-returnStatement
-    :   RETURN expression
-    ;
-
-whileStatement
-	:   WHILE conditionalScope
-    ;
-
-ifStatement
-	:   IF conditionalScope (ELIF conditionalScope)* (ELSE scopeStatement)?
+arrayDeclaration
+    :   LARRAY INT RARRAY
     ;
 
 conditionalScope
@@ -68,12 +48,12 @@ term
 	;
 
 factor
-    :   NOT? MINUS? unary (comparisonOperator unary)*
+    :   (NOT|MINUS)? unary (comparisonOperator unary)*
     ;
 
 unary
     :   terminal
-    |   ID (arrayAccess)? // potential array access
+    |   ID arrayAccess? // potential array access
     |   ID funcCall
     |   LBRACKET expression RBRACKET
     |   LARRAY (expression (COMMA expression)*)? RARRAY
@@ -94,9 +74,6 @@ terminal
     |   BOOL
     |   LITERAL
     |   CHAR
-    ;
-variableType
-    :   terminalVariableType (LARRAY INT RARRAY)*
     ;
 terminalVariableType
     :   INT_TYPE
@@ -195,9 +172,6 @@ ELIF
     ;
 ELSE
     :   'else'
-    ;
-RETURN_VALUE
-    :   '->'
     ;
 RETURN
     :   'return'

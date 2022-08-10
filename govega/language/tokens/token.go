@@ -6,40 +6,41 @@
 
 package tokens
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // token tag constants for identifying tokens. numbering start at 256 as the integers 0-255 represent runes (chars)
 const (
-	EOF        int = iota + 256 // end of file
-	EQ                          // ==
-	LE                          // <=
-	GE                          // >=
-	NE                          // !=
-	CONST                       // const
-	FUNC                        // func
-	WHILE                       // while
-	IF                          // if
-	ELIF                        // elif
-	ELSE                        // else
-	RETURNTYPE                  // ->
-	RETURN                      // return
-	PASS                        // pass
-	CONTINUE                    // continue
-	BREAK                       // break
-	TRUE                        // true
-	FALSE                       // false
-	NOT                         // not
-	AND                         // and
-	BOOLAND                     // &&
-	OR                          // or
-	BOOLOR                      // ||
-	INDEX                       // [i]
-	ID                          // identifier
-	BASIC                       // basic data type (e.g. int, char)
-	TYPE                        // non-basic data types (e.g. string, array)
-	NUM                         // normal numbers (int)
-	REAL                        // real numbers (floating point)
-	LITERAL                     // everything enclosed in '' or ""
+	EOF      int = iota + 256 // end of file
+	EQ                        // ==
+	LE                        // <=
+	GE                        // >=
+	NE                        // !=
+	CONST                     // const
+	FUNC                      // func
+	WHILE                     // while
+	IF                        // if
+	ELIF                      // elif
+	ELSE                      // else
+	RETURN                    // return
+	PASS                      // pass
+	CONTINUE                  // continue
+	BREAK                     // break
+	TRUE                      // true
+	FALSE                     // false
+	NOT                       // not
+	AND                       // and
+	BOOLAND                   // &&
+	OR                        // or
+	BOOLOR                    // ||
+	INDEX                     // [i]
+	ID                        // identifier
+	BASIC                     // basic data type (e.g. int, char)
+	TYPE                      // non-basic data types (e.g. string, array)
+	NUM                       // normal numbers (int)
+	REAL                      // real numbers (floating point)
+	LITERAL                   // everything enclosed in '' or ""
 )
 
 // token struct represents simple basic language tokens identified by an integer number
@@ -59,7 +60,7 @@ func (t *token) GetTag() int {
 
 // String print token as string
 func (t *token) String() string {
-	return fmt.Sprintf("%v", t.tag)
+	return string(rune(t.tag))
 }
 
 // num is a numeric tokens

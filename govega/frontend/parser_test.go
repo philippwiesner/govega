@@ -1,8 +1,6 @@
 package frontend
 
 import (
-	"govega/govega/language"
-	"govega/govega/language/tokens"
 	"testing"
 )
 
@@ -14,28 +12,18 @@ func (mock *mockBlockParser) parseFunctionDeclaration(p Parser) error {
 	return nil
 }
 
-func (mock *mockBlockParser) parseFunctionReturnType(p Parser, s *Symbol) error {
+func (mock *mockBlockParser) parseFunctionReturnType(p Parser) error {
 	return nil
 }
 
-func (mock *mockBlockParser) parseScope(p Parser, name string) error {
+func (mock *mockBlockParser) parseScope(p Parser) error {
 	return nil
 }
 
 func TestParseBlock(t *testing.T) {
-	tokenStream := NewTokenStream()
-
-	tokenStream.Add(tokens.NewWord("func", tokens.FUNC), ErrorState{})
-	tokenStream.Add(tokens.NewWord("test", tokens.ID), ErrorState{})
-	tokenStream.Add(tokens.NewToken('('), ErrorState{})
-	tokenStream.Add(tokens.NewToken(')'), ErrorState{})
-	tokenStream.Add(language.ReturnType, ErrorState{})
-	tokenStream.Add(tokens.NewWord("func", tokens.FUNC), ErrorState{})
-	tokenStream.Add(tokens.NewWord("bla", tokens.ID), ErrorState{})
-	tokenStream.Add(tokens.NewToken('('), ErrorState{})
-	tokenStream.Add(tokens.NewToken(')'), ErrorState{})
-	tokenStream.Add(language.ReturnType, ErrorState{})
-	tokenStream.Add(tokens.NewToken(tokens.EOF), ErrorState{})
+	code := "fun test()"
+	lexer := NewLexer([]byte(code), "test")
+	tokenStream, _ := lexer.Scan()
 
 	var mockParser Parser = &mockBlockParser{
 		parserObject{
