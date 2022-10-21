@@ -7,13 +7,13 @@
 package language
 
 import (
-	"govega/govega/helper"
-	"govega/govega/language/tokens"
+	"govega/vega/helper"
+	"govega/vega/language/tokens"
 )
 
 // define special combined tokens, keywords and special escaped characters to be used by the lexer
 var (
-	Eq                    = tokens.NewWord("<=", tokens.EQ)
+	Eq                    = tokens.NewWord("==", tokens.EQ)
 	Ne                    = tokens.NewWord("!=", tokens.NE)
 	Le                    = tokens.NewWord("<=", tokens.LE)
 	Ge                    = tokens.NewWord(">=", tokens.GE)
@@ -26,7 +26,7 @@ var (
 )
 
 // initKeyWords creates a new lookup Hashtable containing all the keywords of the language
-func initKeyWords() *helper.HashTable {
+func initKeyWords() helper.HashTable {
 	basicTypes := []IBasicType{IntType, FloatType, CharType, BoolType}
 	vocabulary := []tokens.IWord{
 		tokens.NewWord("str", tokens.TYPE),
@@ -63,7 +63,7 @@ func initKeyWords() *helper.HashTable {
 // initHexadecimalChars creates a lookup Hashtable for all hexadecimal escaped characters.
 //
 // valid hexadecimal escape sequences are \x00 - \xff. Uppercase will automatically be converted to lowercase.
-func initHexadecimalChars() *helper.HashTable {
+func initHexadecimalChars() helper.HashTable {
 	table := helper.NewHashTable()
 	alphabet := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}
 	for i := 0; i < 16; i++ {
@@ -79,7 +79,7 @@ func initHexadecimalChars() *helper.HashTable {
 // initOctalChars creates a lookup Hashtable for all octal escaped characters.
 //
 // valid octal escape sequences are \o000 - \0377.
-func initOctalChars() *helper.HashTable {
+func initOctalChars() helper.HashTable {
 	table := helper.NewHashTable()
 	alphabet := []rune{'0', '1', '2', '3', '4', '5', '6', '7'}
 	for i := 0; i < 4; i++ {
@@ -97,7 +97,7 @@ func initOctalChars() *helper.HashTable {
 // initUnicodeChars creates a lookup Hashtable for all unicode escaped characters.
 //
 // valid unicode escape sequences are \u0000 - \uffff. Uppercase will automatically be converted to lowercase.
-func initUnicodeChars() *helper.HashTable {
+func initUnicodeChars() helper.HashTable {
 	table := helper.NewHashTable()
 	alphabet := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}
 	for i := 0; i < 16; i++ {

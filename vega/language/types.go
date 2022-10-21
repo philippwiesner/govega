@@ -6,7 +6,7 @@
 
 package language
 
-import "govega/govega/language/tokens"
+import "govega/vega/language/tokens"
 
 // BasicType represents simple or basic variable types like integers, floating point numbers, chars or boolean values
 type BasicType struct {
@@ -17,8 +17,11 @@ type BasicType struct {
 // newBasicType is the constructor for new a BasicType
 //
 // Takes the name of the type, tag and memory storage space.
-func newBasicType(varType string, tag int, width int) *BasicType {
-	return &BasicType{tokens.NewWord(varType, tag), width}
+func newBasicType(varType string, tag int, w int) *BasicType {
+	return &BasicType{
+		IWord: tokens.NewWord(varType, tag),
+		width: w,
+	}
 }
 
 // GetWidth public getter method for the memory storage space
@@ -39,7 +42,7 @@ var (
 // Each array inherits the BasicType to describe the array as a dedicated type, further a size for the array, a data
 // type for the data stored inside the array and the dimensions of the array for multidimensional arrays exists
 type ArrayType struct {
-	*BasicType
+	BasicType
 	size       int
 	arrayType  *BasicType
 	dimensions []int
@@ -54,11 +57,11 @@ func newArray(t interface{}, s int) *ArrayType {
 	arr.size = s
 	switch v := t.(type) {
 	case *BasicType:
-		arr.BasicType = newBasicType("[]", tokens.INDEX, s*v.width)
+		arr.BasicType = *newBasicType("[]", tokens.INDEX, s*v.width)
 		arr.arrayType = v
 		arr.dimensions = []int{s}
 	case *ArrayType:
-		arr.BasicType = newBasicType(v.GetLexeme(), v.GetTag(), s*v.GetWidth())
+		arr.BasicType = *newBasicType(v.GetLexeme(), v.GetTag(), s*v.GetWidth())
 		arr.arrayType = v.arrayType
 		arr.dimensions = append(v.dimensions, s)
 	}
@@ -82,10 +85,10 @@ func (a *ArrayType) GetDimensions() []int {
 
 // StringType is basically a special array just for characters
 type StringType struct {
-	*ArrayType
+	ArrayType
 }
 
 // newString is the constructor for creating new strings with an array of the type CHAR
 func newString(s int) *StringType {
-	return &StringType{newArray(CharType, s)}
+	return &StringType{ArrayType: *newArray(CharType, s)}
 }

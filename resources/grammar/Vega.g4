@@ -9,7 +9,7 @@ functionParameterDeclaration
     ;
 
 functionParameterDefinition
-    :   terminalVariableType (arrayDeclaration)* ID
+    :   terminalVariableType (LARRAY RARRAY)* ID
     ;
 
 functionReturnType
@@ -17,26 +17,22 @@ functionReturnType
     ;
 
 scopeStatement
-    :   LCURLY statement RCURLY
+    :   LCURLY PASS DELIMITER | (statement)+ RCURLY
     ;
 
 statement
-	:	(CONST? terminalVariableType arrayDeclaration* ID (COMMA ID)* (ASSIGN expression)? DELIMITER
+	:	CONST? terminalVariableType (LARRAY INT RARRAY)* ID (COMMA ID)* (ASSIGN expression)? DELIMITER
 	|   ID arrayAccess* (COMMA ID arrayAccess* )* ASSIGN expression DELIMITER
+	|   ID funcCall
 	|   RETURN expression DELIMITER
 	|   CONTINUE DELIMITER
 	|   BREAK DELIMITER
 	|	WHILE conditionalScope
 	|	IF conditionalScope (ELIF conditionalScope)* (ELSE scopeStatement)?
-	|   PASS DELIMITER)+
 	;
 
-arrayDeclaration
-    :   LARRAY INT RARRAY
-    ;
-
 conditionalScope
-    :   LBRACKET expression RBRACKET scopeStatement
+    :   expression scopeStatement
     ;
 
 expression

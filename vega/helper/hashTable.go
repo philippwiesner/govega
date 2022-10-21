@@ -8,6 +8,14 @@
 
 package helper
 
+type HashTable interface {
+	Get(key string) (result interface{}, ok bool)
+	Add(key string, value interface{})
+	GetBucketCount() uint
+	getCapacity() uint
+	getLength() uint
+}
+
 // tableSize: initial hash table size
 //
 // hashFactor: prime to calculate hashing value
@@ -24,34 +32,51 @@ type bucket struct {
 	next  *bucket     // link to next bucket
 }
 
-// HashTable is a simple table which stored objects via a calculated hash.
+// hashTable is a simple table which stored objects via a calculated hash.
 //
 // Methods for adding new elements are Add and for retrieving Get. If maximum length
 // of the table has been reached the table is automatically increased by the tableSize value
 // and each bucket is being rehashed.
-type HashTable struct {
+type hashTable struct {
 	table       []*bucket
 	cap         uint
 	len         uint
 	BucketCount uint
 }
 
-// NewHashTable is the constructor for creating new HashTable pointers. The constructor calls a private
-// constructor with the actual tableSize.
-func NewHashTable() *HashTable {
-	return newHashTable(tableSize)
+func (t *hashTable) GetBucketCount() uint {
+	return t.BucketCount
 }
 
-// newHashTable is the private constructor for creating a new HashTable pointer. The private constructor let the
-// size of the HashTable choose for better testing.
-func newHashTable(ts uint) *HashTable {
+func (t *hashTable) getCapacity() uint {
+	return t.cap
+}
+
+func (t *hashTable) getLength() uint {
+	return t.len
+}
+
+// NewHashTable is the constructor for creating new hashTable pointers. The constructor calls a private
+// constructor with the actual tableSize.
+func NewHashTable() HashTable {
+	var h HashTable = newHashTable(tableSize)
+	return h
+}
+
+// newHashTable is the private constructor for creating a new hashTable pointer. The private constructor let the
+// size of the hashTable choose for better testing.
+func newHashTable(ts uint) *hashTable {
 	buckets := make([]*bucket, ts, ts)
-	hashTable := HashTable{buckets, ts, 0, 0}
-	return &hashTable
+	return &hashTable{
+		table:       buckets,
+		cap:         ts,
+		len:         0,
+		BucketCount: 0,
+	}
 }
 
 // hash is the private hash function to generate a hash for the keyWord under which the element should be stored.
-func (t *HashTable) hash(key string) uint {
+func (t *hashTable) hash(key string) uint {
 	var hash uint = 0
 	for _, c := range key {
 		hash = ((hashFactor)*hash + uint(c)) % t.cap
@@ -63,7 +88,7 @@ func (t *HashTable) hash(key string) uint {
 //
 // As elements can be of any type an interface is being returned, if the element can not be found
 // additional bool status false is being returned.
-func (t *HashTable) Get(key string) (result interface{}, ok bool) {
+func (t *hashTable) Get(key string) (result interface{}, ok bool) {
 	hash := t.hash(key)
 	entry := t.table[hash]
 	if entry == nil {
@@ -85,7 +110,7 @@ func (t *HashTable) Get(key string) (result interface{}, ok bool) {
 
 // increase is a private method which increases the hashTable via rehashing when the len and cap are equal
 // (hashTable is full)
-func (t *HashTable) increase() {
+func (t *hashTable) increase() {
 	newCap := t.cap + tableSize
 	newHashTable := newHashTable(newCap)
 
@@ -105,7 +130,7 @@ func (t *HashTable) increase() {
 
 // addBucket is a private method to add new elements to the hashTable. This method is used by the increase method
 // for rehashing and the public Add method.
-func (t *HashTable) addBucket(key string, value interface{}) {
+func (t *hashTable) addBucket(key string, value interface{}) {
 	hash := t.hash(key)
 	entry := t.table[hash]
 	newBucket := bucket{key, value, nil}
@@ -130,7 +155,7 @@ func (t *HashTable) addBucket(key string, value interface{}) {
 }
 
 // Add is the public method for adding any value via a key to the hashtable
-func (t *HashTable) Add(key string, value interface{}) {
+func (t *hashTable) Add(key string, value interface{}) {
 	if t.cap == t.len {
 		t.increase()
 	}

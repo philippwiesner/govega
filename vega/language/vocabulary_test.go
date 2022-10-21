@@ -1,7 +1,7 @@
 package language
 
 import (
-	"govega/govega/language/tokens"
+	"govega/vega/language/tokens"
 	"testing"
 )
 
@@ -46,7 +46,7 @@ func TestHexaLiterals(t *testing.T) {
 		{"ff", rune(255)},
 	}
 
-	if EscapeHexaLiterals.BucketCount != 256 {
+	if EscapeHexaLiterals.GetBucketCount() != 256 {
 		t.Fatalf("Table should have 256 entries")
 	}
 
@@ -72,7 +72,7 @@ func TestOctaLiterals(t *testing.T) {
 		{"377", rune(255)},
 	}
 
-	if EscapeOctalLiterals.BucketCount != 256 {
+	if EscapeOctalLiterals.GetBucketCount() != 256 {
 		t.Fatalf("Table should have 256 entries")
 	}
 
@@ -98,8 +98,8 @@ func TestUnicodeLiterals(t *testing.T) {
 		{"12ea", rune(4842)},
 	}
 
-	if EscapeUnicodeLiterals.BucketCount != 65536 {
-		t.Fatalf("Table should have 65535 entries, but it has: %v entries", EscapeUnicodeLiterals.BucketCount)
+	if EscapeUnicodeLiterals.GetBucketCount() != 65536 {
+		t.Fatalf("Table should have 65535 entries, but it has: %v entries", EscapeUnicodeLiterals.GetBucketCount())
 	}
 
 	for i, tc := range tests {

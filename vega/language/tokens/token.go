@@ -65,7 +65,7 @@ func (t *token) String() string {
 
 // num is a numeric tokens
 type num struct {
-	*token
+	token
 	value int // tokens value
 }
 
@@ -73,7 +73,10 @@ type num struct {
 //
 // The token tag is being set to NUM
 func newNum(v int) *num {
-	return &num{newToken(NUM), v}
+	return &num{
+		token: *newToken(NUM),
+		value: v,
+	}
 }
 
 // GetValue public getter method for retrieving the numeric tokens value
@@ -88,7 +91,7 @@ func (n *num) String() string {
 
 // word is a word token
 type word struct {
-	*token
+	token
 	lexeme string // word of the language (more than one character)
 }
 
@@ -97,7 +100,10 @@ type word struct {
 // The tag depends on the word, language keywords have tags defined, identifier and function identifier get
 // a special tag. The differentiation is being made in the lexer
 func newWord(l string, t int) *word {
-	return &word{newToken(t), l}
+	return &word{
+		token:  *newToken(t),
+		lexeme: l,
+	}
 }
 
 // GetLexeme public getter method for lexeme
@@ -112,13 +118,16 @@ func (w *word) String() string {
 
 // realNumber is a floating point number token
 type realNumber struct {
-	*token
+	token
 	value float64 // floating point number value
 }
 
 // newReal is the constructor for a new real number
 func newReal(v float64) *realNumber {
-	return &realNumber{newToken(REAL), v}
+	return &realNumber{
+		token: *newToken(REAL),
+		value: v,
+	}
 }
 
 // GetValue public getter method for the floating point number value
@@ -133,13 +142,16 @@ func (r *realNumber) String() string {
 
 // literal is a literal tokens (everything enclosed in '' or "")
 type literal struct {
-	*token
+	token
 	content string // content between '' or ""
 }
 
 // newLiteral is the constructor for a new literal tokens
 func newLiteral(c string) *literal {
-	return &literal{newToken(LITERAL), c}
+	return &literal{
+		token:   *newToken(LITERAL),
+		content: c,
+	}
 }
 
 // GetContent public getter method for the literal content

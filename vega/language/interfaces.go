@@ -6,7 +6,7 @@
 
 package language
 
-import "govega/govega/language/tokens"
+import "govega/vega/language/tokens"
 
 // IBasicType interface for BasicType
 type IBasicType interface {

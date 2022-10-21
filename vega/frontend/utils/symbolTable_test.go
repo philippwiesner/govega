@@ -1,7 +1,7 @@
-package frontend
+package utils
 
 import (
-	"govega/govega/language"
+	"govega/vega/language"
 	"testing"
 )
 

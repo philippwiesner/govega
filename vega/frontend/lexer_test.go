@@ -1,17 +1,58 @@
 package frontend
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
-	"govega/govega/language"
-	"govega/govega/language/tokens"
+	"govega/vega/language"
+	"govega/vega/language/tokens"
 	"reflect"
 	"testing"
 )
 
+type testLexerInterface interface {
+	Lexer
+	getPeek() rune
+	getLine() int
+	unreadch() error
+	readch() error
+	readcch(char rune) (bool, error)
+	scanCombinedTokens(fch rune, sch rune, word tokens.IWord) (*lexicalToken, error)
+	scanLiterals(indicator rune) (*lexicalToken, error)
+	scanNumbers() (*lexicalToken, error)
+	scanWords() (*lexicalToken, error)
+	scanComments() (*lexicalToken, error)
+	scan() (*lexicalToken, error)
+}
+
+type testLexer struct {
+	lexer
+}
+
+func newTestLexer(vegaLines []string, inputCode []byte) testLexerInterface {
+	v := createTestVega("/path/to/test.vg", vegaLines)
+	var lexer testLexerInterface = &testLexer{
+		lexer{
+			vega:     v.getVega(),
+			peek:     0,
+			code:     bytes.NewReader(inputCode),
+			words:    language.KeyWords,
+			lineFeed: "",
+			line:     1,
+			position: 0,
+		},
+	}
+	return lexer
+}
+
+func (t *testLexer) getPeek() rune {
+	return t.lexer.peek
+}
+
+func (t *testLexer) getLine() int {
+	return t.lexer.line
+}
+
 type LiteralTestWant struct {
-	start   rune
-	end     rune
 	tag     int
 	literal string
 }
@@ -24,25 +65,25 @@ type LiteralTest struct {
 type LiteralFailureTest struct {
 	name string
 	in   string
-	want *LexicalError
+	want VErrorType
 }
 
 func TestNewLexer(t *testing.T) {
 	text := "1+1\n."
 	want := []rune{'1', '+', '1', '\n', '.'}
 	counter := 0
-	lexer := NewLexer([]byte(text), "test")
+	lexer := newTestLexer([]string{}, []byte(text))
 	var err error
 
 	err = lexer.readch()
 	for ; ; err = lexer.readch() {
 		if err != nil {
 			t.Error(err)
-		} else if lexer.peek == 0 {
+		} else if lexer.getPeek() == 0 {
 			break
 		}
-		if lexer.peek != want[counter] {
-			t.Fatalf("Char %v on position %v is not %v", lexer.peek, counter, want[counter])
+		if lexer.getPeek() != want[counter] {
+			t.Fatalf("Char %v on position %v is not %v", lexer.getPeek(), counter, want[counter])
 		}
 		counter++
 	}
@@ -50,7 +91,7 @@ func TestNewLexer(t *testing.T) {
 
 func TestReadcch(t *testing.T) {
 	text := "1+1"
-	lexer := NewLexer([]byte(text), "test")
+	lexer := newTestLexer([]string{}, []byte(text))
 
 	err := lexer.readch()
 	if err != nil {
@@ -75,20 +116,19 @@ func TestCombinedTokens(t *testing.T) {
 
 	for i, tc := range tests {
 		test := fmt.Sprintf("test%d", i+1)
-		lexer := NewLexer([]byte(tc.in), test)
+		lexer := newTestLexer([]string{}, []byte(tc.in))
 		err := lexer.readch()
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = lexer.scanCombinedTokens('!', '=', language.Ne)
+		token, err := lexer.scanCombinedTokens('!', '=', language.Ne)
 		if err != nil {
 			t.Fatal(err)
 		}
-		token, _ := lexer.tokenStream.Remove()
 
-		if token.GetTokenTag() != tc.want {
-			t.Fatalf("%v, token should be %v, but is %v", test, tc.want, token.GetTokenTag())
+		if token.GetTag() != tc.want {
+			t.Fatalf("%v, token should be %v, but is %v", test, tc.want, token.GetTag())
 		}
 
 	}
@@ -98,57 +138,45 @@ func TestScanLiterals(t *testing.T) {
 	tests := []LiteralTest{
 		{
 			"'my literal'",
-			LiteralTestWant{'\'', '\'', tokens.LITERAL, "my literal"},
+			LiteralTestWant{tokens.LITERAL, "'my literal'"},
 		},
 		{
 			"'\\tmy \\nliteral'",
-			LiteralTestWant{'\'', '\'', tokens.LITERAL, "\tmy \nliteral"},
+			LiteralTestWant{tokens.LITERAL, "'\tmy \nliteral'"},
 		},
 		{
 			"\"my literal\"",
-			LiteralTestWant{'"', '"', tokens.LITERAL, "my literal"},
+			LiteralTestWant{tokens.LITERAL, "\"my literal\""},
 		},
 		{
 			"'my \\x3A'",
-			LiteralTestWant{'\'', '\'', tokens.LITERAL, "my \x3a"},
+			LiteralTestWant{tokens.LITERAL, "'my \x3a'"},
 		},
 		{
 			"'my \\123 \\\\'",
-			LiteralTestWant{'\'', '\'', tokens.LITERAL, "my \123 \\"},
+			LiteralTestWant{tokens.LITERAL, "'my \123 \\'"},
 		},
 	}
 	for i, tc := range tests {
 		test := fmt.Sprintf("test%d", i+1)
-		lexer := NewLexer([]byte(tc.in), test)
+		lexer := newTestLexer([]string{}, []byte(tc.in))
 		err := lexer.readch()
 		if err != nil {
 			t.Fatalf("%v: error reading first literal indicator: %v", test, err)
 		}
 
-		err = lexer.scanLiterals(lexer.peek)
+		token, err := lexer.scanLiterals(lexer.getPeek())
 		if err != nil {
 			t.Fatalf("%v: error reading literal: %v", test, err)
 		}
 
-		token, _ := lexer.tokenStream.Remove()
-
-		if token.GetTokenTag() != int(tc.want.start) {
-			t.Fatalf("%v: Want token to be %v, but got: %v", test, tc.want.start, token.GetTokenTag())
-		}
-
-		token, _ = lexer.tokenStream.Remove()
-		if token.GetTokenTag() != tc.want.tag {
-			t.Fatalf("%v: Want token to be %v, but got: %v", test, tc.want.tag, token.GetTokenTag())
+		if token.GetTag() != tc.want.tag {
+			t.Fatalf("%v: Want token to be %v, but got: %v", test, tc.want.tag, token.GetTag())
 		} else {
 			literalToken := token.GetToken().(tokens.ILiteral)
 			if literalToken.GetContent() != tc.want.literal {
 				t.Fatalf("%v: Want literal to be %v, but got: %v", test, tc.want.literal, literalToken.GetContent())
 			}
-		}
-
-		token, _ = lexer.tokenStream.Remove()
-		if token.GetTokenTag() != int(tc.want.start) {
-			t.Fatalf("%v: Want token to be %v, but got: %v", test, tc.want.start, token.GetTokenTag())
 		}
 
 	}
@@ -159,57 +187,51 @@ func TestScanLiteralsFailures(t *testing.T) {
 		{
 			"linebreak in literal",
 			"'fooBar\n'",
-			NewLexicalError(literalNotTerminated, ErrorState{1, 8, "test1", "'fooBar\n"}),
+			literalNotTerminated,
 		},
 		{
 			"invalid escape sequence",
 			"fooBar\\-",
-			NewLexicalError(invalidEscapeSequence, ErrorState{1, 8, "test2", "fooBar\\-"}),
+			invalidEscapeSequence,
 		},
 		{
 			"double colon literal escape in single colon literal",
 			"'foo\\\"Bar'",
-			NewLexicalError(invalidEscapeSequenceLiteral, ErrorState{1, 6, "test3", "'foo\\\""}),
+			invalidEscapeSequenceLiteral,
 		},
 		{
 			"single colon literal escape in double colon literal",
 			"\"foo\\'Bar\"",
-			NewLexicalError(invalidEscapeSequenceLiteral, ErrorState{1, 6, "test4", "\"foo\\'"}),
+			invalidEscapeSequenceLiteral,
 		},
 		{
 			"invalid hex escape sequence",
 			"'foo\\xAg'",
-			NewLexicalError(invalidEscapeSequenceHex, ErrorState{1, 8, "test5", "'foo\\xAg"}),
+			invalidEscapeSequenceHexadecimal,
 		},
 		{
 			"invalid oct escape sequence",
 			"'foo\\088Bar'",
-			NewLexicalError(invalidEscapeSequenceOct, ErrorState{1, 8, "test6", "'foo\\088"}),
+			invalidEscapeSequenceOctal,
 		},
 		{
 			"no literal terminator",
 			"'fooBar",
-			NewLexicalError(literalNotTerminated, ErrorState{1, 8, "test7", "'fooBar\x00"}),
+			literalNotTerminated,
 		},
 	}
-	var lexError *LexicalError
 	for i, tc := range tests {
 		test := fmt.Sprintf("test%d", i+1)
-		lexer := NewLexer([]byte(tc.in), test)
+		lexer := newTestLexer([]string{}, []byte(tc.in))
 		err := lexer.readch()
 		if err != nil {
 			t.Fatalf("%v %v:\nerror reading first literal indicator: %v", test, tc.name, err)
 		}
 
-		err = lexer.scanLiterals(lexer.peek)
-		switch {
-		case errors.As(err, &lexError):
-			gotErr := err.(*LexicalError)
-			if !reflect.DeepEqual(tc.want, gotErr) {
-				t.Fatalf("%v %v:\nexpected error msg\n%v\n, but got\n%v", test, tc.name, tc.want, gotErr)
-			}
-		default:
-			t.Fatalf("%v %v:\nUnexpected error: %v\nDebug information: %#v", test, tc.name, err, lexer.errorState)
+		_, err = lexer.scanLiterals(lexer.getPeek())
+		gotErrType := GetVErrorType(err)
+		if gotErrType != tc.want {
+			t.Fatalf("%v %v: Expected vega Error type to be %v, but got %v", test, tc.name, tc.want, gotErrType)
 		}
 
 	}
@@ -225,19 +247,18 @@ func TestScanNumbers(t *testing.T) {
 
 	for i, tc := range tests {
 		test := fmt.Sprintf("test%d", i+1)
-		lexer := NewLexer([]byte(tc.in), test)
+		lexer := newTestLexer([]string{}, []byte(tc.in))
 		err := lexer.readch()
 		if err != nil {
-			t.Fatalf("%v: Error reading first digit: %v\nDebug Output: %v", test, err, lexer.errorState)
+			t.Fatalf("%v: Error reading first digit:\n%v", test, err)
 		}
 
-		err = lexer.scanNumbers()
+		token, err := lexer.scanNumbers()
 		if err != nil {
-			t.Fatalf("%v: Error reading full digit: %v\nDebug Output: %v", test, err, lexer.errorState)
+			t.Fatalf("%v: Error reading full digit:\n%v", test, err)
 		}
 
-		tokenBucket, err := lexer.tokenStream.Remove()
-		numberToken := tokenBucket.GetToken()
+		numberToken := token.GetToken()
 		switch number := numberToken.(type) {
 		case tokens.INum:
 			wantNumber := tc.want.(tokens.INum)
@@ -267,19 +288,18 @@ func TestScanWords(t *testing.T) {
 
 	for i, tc := range tests {
 		test := fmt.Sprintf("test%d", i+1)
-		lexer := NewLexer([]byte(tc.in), test)
+		lexer := newTestLexer([]string{}, []byte(tc.in))
 
 		err := lexer.readch()
 		if err != nil {
-			t.Fatalf("%v: Error reading first word char %v\nDebug: %v", test, err, lexer.errorState)
+			t.Fatalf("%v: Error reading first word char:\n%v", test, err)
 		}
 
-		err = lexer.scanWords()
+		token, err := lexer.scanWords()
 		if err != nil {
-			t.Fatalf("%v: Error reading full word: %v\nDebug Output: %v", test, err, lexer.errorState)
+			t.Fatalf("%v: Error reading full word:\n%v", test, err)
 		}
 
-		token, err := lexer.tokenStream.Remove()
 		word := token.GetToken().(tokens.IWord)
 		if !reflect.DeepEqual(word, tc.want) {
 			t.Fatalf("%v: Word: %#v is not %#v", test, word, tc.want)
@@ -299,14 +319,14 @@ func TestLexer_scanComments(t *testing.T) {
 	}
 	for i, tc := range tests {
 		test := fmt.Sprintf("test%d", i+1)
-		lexer := NewLexer([]byte(tc.in), test)
+		lexer := newTestLexer([]string{}, []byte(tc.in))
 
 		err := lexer.readch()
 		if err != nil {
 			t.Error(err)
 		}
 
-		err = lexer.scanComments()
+		_, err = lexer.scanComments()
 		if err != nil {
 			t.Error(err)
 		}
@@ -316,8 +336,8 @@ func TestLexer_scanComments(t *testing.T) {
 			t.Error(err)
 		}
 
-		if lexer.peek != tc.want {
-			t.Fatalf("%v: Want peek to be: %v, but got: %v", test, tc.want, string(lexer.peek))
+		if lexer.getPeek() != tc.want {
+			t.Fatalf("%v: Want peek to be: %v, but got: %v", test, tc.want, string(lexer.getPeek()))
 		}
 	}
 }
@@ -350,19 +370,10 @@ func TestLexer_Scan(t *testing.T) {
 
 	for i, tc := range tests {
 		test := fmt.Sprintf("test%d", i+1)
-		lexer := NewLexer([]byte(tc.in), test)
-
-		ts, err := lexer.Scan()
-		if err != nil {
-			t.Error(err)
-		}
-
-		if lexer.errorState.lineNumber != tc.lineNumber {
-			t.Fatalf("%v: Linecount is not %v, got: %v", test, tc.lineNumber, lexer.errorState.lineNumber)
-		}
+		lexer := newTestLexer([]string{}, []byte(tc.in))
 
 		for _, tok := range tc.want {
-			tokenInterface, err := ts.Remove()
+			tokenInterface, err := lexer.scan()
 			if err != nil {
 				t.Error(err)
 			}
@@ -381,6 +392,56 @@ func TestLexer_Scan(t *testing.T) {
 				t.Fatalf("%v: Unexpected token: %#v", test, token)
 			}
 		}
+
+		if lexer.getLine() != tc.lineNumber {
+			t.Fatalf("%v: Linecount is not %v, got: %v", test, tc.lineNumber, lexer.getLine())
+		}
+	}
+}
+
+func TestLexer_ScanNonCode(t *testing.T) {
+	tests := []string{
+		"blubb",
+		"lorem ipsum +=\n hello world",
 	}
 
+	for i, tc := range tests {
+		test := fmt.Sprintf("test%d", i+1)
+		lexer := newTestLexer([]string{}, []byte(tc))
+		token, err := lexer.scan()
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		if token == nil {
+			t.Fatalf("%v: Expected Token to be filled, but is empty", test)
+		}
+
+	}
+
+}
+
+func TestLexer_ScanError(t *testing.T) {
+	var err error
+	input := []string{"// test doc string\n", "a = 'a\\-"}
+	inputCode := input[0] + input[1]
+	testVega := &vega{
+		file:      "/path/to/test.vg",
+		codeLines: input,
+	}
+	wantError := testVega.newLexicalSyntaxError(invalidEscapeSequence, 2, 8, "Invalid escape sequence")
+
+	lexer := newTestLexer([]string{}, []byte(inputCode))
+
+	for ; err == nil; _, err = lexer.scan() {
+	}
+
+	if err == nil {
+		t.Fatalf("Expected error output")
+	}
+
+	if wantError.Error() != err.Error() {
+		t.Fatalf("Expected:\n---\n%v\n---\nbut got:\n---\n%v\n---", wantError, err)
+	}
 }

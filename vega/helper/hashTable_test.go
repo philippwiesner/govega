@@ -58,14 +58,14 @@ func TestHashTable_Add(t *testing.T) {
 			hashTable.Add(b.key, b.value)
 		}
 
-		gotBuckets := hashTable.BucketCount
+		gotBuckets := hashTable.GetBucketCount()
 		if gotBuckets != tc.want.BucketCount {
 			t.Fatalf("test %d: Capacitiy expected: %v, got: %v", i+1, tc.want.BucketCount, gotBuckets)
 		}
 
-		gotTableSize := hashTable.cap
+		gotTableSize := hashTable.getCapacity()
 		if gotTableSize != tc.want.TableSize {
-			t.Fatalf("test %d: TableSize expected: %v, got :%v. Debug: Table length %v", i+1, tc.want.TableSize, gotTableSize, hashTable.len)
+			t.Fatalf("test %d: TableSize expected: %v, got :%v. Debug: Table length %v", i+1, tc.want.TableSize, gotTableSize, hashTable.getLength())
 		}
 
 		for _, b := range tc.in {
@@ -82,6 +82,6 @@ func TestHashTable_Get(t *testing.T) {
 	ht := NewHashTable()
 	el, _ := ht.Get("")
 	if el != nil {
-		t.Fatalf("Empty HashTable should return nil element")
+		t.Fatalf("Empty hashTable should return nil element")
 	}
 }
