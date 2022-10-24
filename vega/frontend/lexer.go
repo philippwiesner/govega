@@ -374,10 +374,12 @@ func (l *lexer) scan() (*lexicalToken, error) {
 		switch {
 		// skip line breaks
 		case l.peek == '\n':
+			token := l.newLexicalToken(tokens.NewToken('\n'))
 			l.codeLines = append(l.codeLines, l.lineFeed)
 			l.lineFeed = ""
 			l.position = 0
 			l.line++
+			return token, nil
 		// skip comments
 		case l.peek == '/':
 			var token *lexicalToken

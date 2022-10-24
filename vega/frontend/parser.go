@@ -14,30 +14,53 @@ import (
 // parser stores needed objects to keep track during the parsing
 type parser struct {
 	*vega
-	lexer        Lexer
-	lexicalError error
-	nextToken    *lexicalToken      // next token read by looking a head
-	currentToken *lexicalToken      // current token which is being analyzed
-	table        *utils.SymbolTable // symbolTable to store information about recognized identifiers
+	lexer              Lexer
+	lexicalError       error
+	lineBreakDelimiter bool               // flag to disrupt line break skipping for delimiter character
+	nextToken          *lexicalToken      // next token read by looking a head
+	currentToken       *lexicalToken      // current token which is being analyzed
+	table              *utils.SymbolTable // symbolTable to store information about recognized identifiers
 }
 
 // NewParser generates a new Parser interface
 func (v *vega) NewParser(lexer Lexer) Parser {
 	var parser Parser = &parser{
-		vega:         v,
-		lexer:        lexer,
-		currentToken: nil,
-		lexicalError: nil,
-		nextToken:    nil,
-		table:        utils.NewSymbolTable(),
+		vega:               v,
+		lexer:              lexer,
+		lineBreakDelimiter: false,
+		currentToken:       nil,
+		lexicalError:       nil,
+		nextToken:          nil,
+		table:              utils.NewSymbolTable(),
 	}
 	return parser
 }
 
-// getToken collect new token from lexer. When nextToken has already been read, then update the currentToken with the
-// nextToken. Otherwise, get new lexialToken from lexer. When an error raises return EOF error or set currentToken to
-// eofToken when nil has been returned from lexer.
-func (parser *parser) getToken() error {
+// getToken gets token from lexer
+func (parser *parser) getToken() (*lexicalToken, error) {
+	var (
+		err   error
+		token *lexicalToken
+	)
+	for {
+		if token, err = parser.lexer.scan(); err != nil {
+			return nil, err
+		}
+		if !parser.lineBreakDelimiter {
+			if token.GetTag() != '\n' {
+				break
+			}
+		} else {
+			parser.lineBreakDelimiter = false
+			break
+		}
+	}
+	return token, nil
+}
+
+// readToken retrieves new tokens from lexer. First the current token is being updated with the previous next token and
+// then the nextToken is updated.
+func (parser *parser) readToken() error {
 	var (
 		err error
 	)
@@ -45,13 +68,13 @@ func (parser *parser) getToken() error {
 		return parser.lexicalError
 	}
 	if parser.nextToken == nil {
-		if parser.currentToken, err = parser.lexer.scan(); err != nil {
+		if parser.currentToken, err = parser.getToken(); err != nil {
 			return err
 		}
 	} else {
 		parser.currentToken = parser.nextToken
 	}
-	if parser.nextToken, err = parser.lexer.scan(); err != nil {
+	if parser.nextToken, err = parser.getToken(); err != nil {
 		return err
 	}
 	return nil
@@ -64,7 +87,7 @@ func (parser *parser) lookAHead(tag int) bool {
 
 // matchToken compares a given token with the currentToken
 func (parser *parser) matchToken(tag int) bool {
-	if err := parser.getToken(); err != nil {
+	if err := parser.readToken(); err != nil {
 		parser.lexicalError = err
 		return false
 	}
@@ -243,22 +266,45 @@ func (parser *parser) parseTerminalVariableType() error {
 	}
 }
 
+// parseDelimiter parses delimiter characters
+//
+// delimiter:
+//   delimiterCharacters
+// ;
+func (parser *parser) parseDelimiter() error {
+	switch {
+	case parser.lookAHead(';'):
+		if !parser.matchToken(';') {
+			return parser.syntaxError("lexicalError")
+		}
+	case parser.lookAHead('\n'):
+		if !parser.matchToken('\n') {
+			return parser.syntaxError("lexicalError")
+		}
+	default:
+		_ = parser.matchToken(-1)
+		return parser.syntaxError("Mismatched input '%v', expected ';' or line break")
+	}
+	return nil
+}
+
 // parseScope parses scopes
 //
 // scopeStatement:
-//   LCURLY PASS DELIMITER | (statement)+ RCURLY
+//   LCURLY PASS delimiter | (statement)+ RCURLY
 // ;
 func (parser *parser) parseScope(parserInterface Parser) error {
 	if !parser.matchToken('{') {
 		return parser.syntaxError("Mismatched input '%v', expected '{'")
 	}
-	// statement: PASS DELIMITER
+	// statement: PASS delimiter
 	if parser.lookAHead(tokens.PASS) {
+		parser.lineBreakDelimiter = true
 		if !parser.matchToken(tokens.PASS) {
 			return parser.syntaxError("lexicalError")
 		}
-		if !parser.matchToken(';') {
-			return parser.syntaxError("Mismatched input '%v', expected ';'")
+		if err := parser.parseDelimiter(); err != nil {
+			return err
 		}
 	} else {
 		// error on empty body
@@ -297,33 +343,29 @@ func (parser *parser) parseScope(parserInterface Parser) error {
 //   |  ID (
 //  		(LBRACKET ( expression (COMMA expression)* )? RBRACKET)
 //  	  | (arrayAccess* (COMMA ID arrayAccess* )* ASSIGN expression)
-// 	    ) DELIMITER
-//   |  RETURN expression DELIMITER
-//   |  CONTINUE DELIMITER
-//   |  BREAK DELIMITER
+// 	    ) delimiter
+//   |  RETURN expression delimiter
+//   |  CONTINUE delimiter
+//   |  BREAK delimiter
 //   |  WHILE conditionalScope
 //   |  IF conditionalScope (ELIF conditionalScope)* (ELSE scopeStatement)?
 // ;
 func (parser *parser) parseStatement(parserInterface Parser) error {
 	switch {
-	// statement: CONTINUE DELIMITER
+	// statement: CONTINUE delimiter
 	case parser.lookAHead(tokens.CONTINUE):
+		parser.lineBreakDelimiter = true
 		if !parser.matchToken(tokens.CONTINUE) {
 			return parser.syntaxError("lexicalError")
 		}
-		if !parser.matchToken(';') {
-			return parser.syntaxError("Mismatched input '%v', expected ';'")
-		}
-		return nil
-	// statement: BREAK DELIMITER
+		return parser.parseDelimiter()
+	// statement: BREAK delimiter
 	case parser.lookAHead(tokens.BREAK):
+		parser.lineBreakDelimiter = true
 		if !parser.matchToken(tokens.BREAK) {
 			return parser.syntaxError("lexicalError")
 		}
-		if !parser.matchToken(';') {
-			return parser.syntaxError("Mismatched input '%v', expected ';'")
-		}
-		return nil
+		return parser.parseDelimiter()
 	// statement: IF conditionalScope (ELIF conditionalScope)* (ELSE scopeStatement)?
 	case parser.lookAHead(tokens.IF):
 		if !parser.matchToken(tokens.IF) {
@@ -355,7 +397,7 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 			return parser.syntaxError("lexicalError")
 		}
 		return parserInterface.parseConditionalScope(parserInterface)
-	// statement: RETURN expresion DELIMITER
+	// statement: RETURN expression delimiter
 	case parser.lookAHead(tokens.RETURN):
 		if !parser.matchToken(tokens.RETURN) {
 			return parser.syntaxError("lexicalError")
@@ -363,11 +405,8 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 		if err := parserInterface.parseExpression(parserInterface); err != nil {
 			return err
 		}
-		if !parser.matchToken(';') {
-			return parser.syntaxError("Mismatched input '%v', expected ';'")
-		}
-		return nil
-	// CONST? terminalVariableType (LARRAY INT RARRAY)* ID (COMMA ID)* (ASSIGN expression)? DELIMITER
+		return parser.parseDelimiter()
+	// CONST? terminalVariableType (LARRAY INT RARRAY)* ID (COMMA ID)* (ASSIGN expression)? delimiter
 	case parser.lookAHead(tokens.CONST), parser.lookAHead(tokens.BASIC), parser.lookAHead(tokens.TYPE):
 		if parser.lookAHead(tokens.CONST) {
 			if !parser.matchToken(tokens.CONST) {
@@ -388,6 +427,7 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 				return parser.syntaxError("Mismatched input '%v', expected ']'")
 			}
 		}
+		parser.lineBreakDelimiter = true
 		if !parser.matchToken(tokens.ID) {
 			return parser.syntaxError("Mismatched input '%v', expected <identifier> or '['")
 		}
@@ -396,6 +436,7 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 				if !parser.matchToken(',') {
 					return parser.syntaxError("lexicalError")
 				}
+				parser.lineBreakDelimiter = true
 				if !parser.matchToken(tokens.ID) {
 					return parser.syntaxError("Mismatched input '%v', expected <identifier>")
 				}
@@ -409,16 +450,14 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 				return err
 			}
 		}
-		if !parser.matchToken(';') {
-			return parser.syntaxError("Mismatched input '%v', expected ';'")
-		}
-		return nil
-	// ID ((LBRACKET ( expression (COMMA expression)* )? RBRACKET) | (arrayAccess* (COMMA ID arrayAccess* )* ASSIGN expression)) DELIMITER
+		return parser.parseDelimiter()
+	// ID ((LBRACKET ( expression (COMMA expression)* )? RBRACKET) | (arrayAccess* (COMMA ID arrayAccess* )* ASSIGN expression)) delimiter
 	case parser.lookAHead(tokens.ID):
 		if !parser.matchToken(tokens.ID) {
 			return parser.syntaxError("lexicalError")
 		}
 		switch {
+		// function call
 		case parser.lookAHead('('):
 			if !parser.matchToken('(') {
 				return parser.syntaxError("lexicalError")
@@ -436,9 +475,11 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 					}
 				}
 			}
+			parser.lineBreakDelimiter = true
 			if !parser.matchToken(')') {
 				return parser.syntaxError("Mismatched input '%v', expected ',' or ')'")
 			}
+		// array definiton or multiple value assignment
 		case parser.lookAHead('[') || parser.lookAHead(','):
 			for parser.lookAHead('[') {
 				if err := parserInterface.parseArrayAccess(parserInterface); err != nil {
@@ -470,10 +511,7 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 			_ = parser.matchToken(-1)
 			return parser.syntaxError("Mismatched input '%v', expected '(', '[', ',' or '='")
 		}
-		if !parser.matchToken(';') {
-			return parser.syntaxError("Mismatched input '%v', expected ';'")
-		}
-		return nil
+		return parser.parseDelimiter()
 	default:
 		return errors.New("StatementNotDefined")
 	}
@@ -499,6 +537,7 @@ func (parser *parser) parseArrayAccess(parserInterface Parser) error {
 	if err := parserInterface.parseExpression(parserInterface); err != nil {
 		return err
 	}
+	parser.lineBreakDelimiter = true
 	if !parser.matchToken(']') {
 		return parser.syntaxError("Mismatched input '%v', expected ']'")
 	}
@@ -681,6 +720,7 @@ func (parser *parser) parseUnary(parserInterface Parser) error {
 					}
 				}
 			}
+			parser.lineBreakDelimiter = true
 			if !parser.matchToken(')') {
 				return parser.syntaxError("Mismatched input '%v', expected ',' or ')'")
 			}
@@ -693,6 +733,7 @@ func (parser *parser) parseUnary(parserInterface Parser) error {
 		if err := parserInterface.parseExpression(parserInterface); err != nil {
 			return err
 		}
+		parser.lineBreakDelimiter = true
 		if !parser.matchToken(')') {
 			return parser.syntaxError("Mismatched input '%v', expected ')'")
 		}
@@ -712,11 +753,13 @@ func (parser *parser) parseUnary(parserInterface Parser) error {
 				return err
 			}
 		}
+		parser.lineBreakDelimiter = true
 		if !parser.matchToken(']') {
 			return parser.syntaxError("Mismatched input '%v', expected ',' or ']'")
 		}
 	// NUM | FLOAT | TRUE | FALSE | LITERAL
 	default:
+		parser.lineBreakDelimiter = true
 		switch {
 		case parser.lookAHead(tokens.NUM):
 			if !parser.matchToken(tokens.NUM) {

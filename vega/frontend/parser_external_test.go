@@ -84,18 +84,18 @@ func TestParser_ParseError(t *testing.T) {
 		},
 		{
 			"Missing line delimiter after pass statement",
-			"func test(int []a, int b) int { pass #",
-			"Mismatched input '#', expected ';'",
+			"func test(int []a, int b) int { pass }",
+			"Mismatched input '}', expected ';' or line break",
 		},
 		{
 			"Missing line delimiter after continue statement",
 			"func test(int []a, int b) int { continue #",
-			"Mismatched input '#', expected ';'",
+			"Mismatched input '#', expected ';' or line break",
 		},
 		{
 			"Missing line delimiter after break statement",
 			"func test(int []a, int b) int { break #",
-			"Mismatched input '#', expected ';'",
+			"Mismatched input '#', expected ';' or line break",
 		},
 		{
 			"Pass and following statements",
@@ -150,7 +150,7 @@ func TestParser_ParseError(t *testing.T) {
 		{
 			"Missing return delimiter",
 			"func test(int []a, int b) int { return true #",
-			"Mismatched input '#', expected ';'",
+			"Mismatched input '#', expected ';' or line break",
 		},
 		{
 			"No valid const variable type",
@@ -190,7 +190,7 @@ func TestParser_ParseError(t *testing.T) {
 		{
 			"No comma or assignment",
 			"func test(int []a, int b) int { int[8] a #",
-			"Mismatched input '#', expected ';'",
+			"Mismatched input '#', expected ';' or line break",
 		},
 		{
 			"Missing second identifier after comma",
@@ -205,7 +205,7 @@ func TestParser_ParseError(t *testing.T) {
 		{
 			"Missing delimiter after declaration assignment",
 			"func test(int []a, int b) int { int[8] a = 5#",
-			"Mismatched input '#', expected ';'",
+			"Mismatched input '#', expected ';' or line break",
 		},
 		{
 			"Missing funcCall, array, comma or assignment",
@@ -230,7 +230,7 @@ func TestParser_ParseError(t *testing.T) {
 		{
 			"No assigment after funccall",
 			"func test(int []a, int b) int { a(b, c)=",
-			"Mismatched input '=', expected ';'",
+			"Mismatched input '=', expected ';' or line break",
 		},
 		{
 			"No expression in array assignment",
@@ -265,7 +265,7 @@ func TestParser_ParseError(t *testing.T) {
 		{
 			"Missing delimiter",
 			"func test(int []a, int b) int { a[b], c[d] = 5#",
-			"Mismatched input '#', expected ';'",
+			"Mismatched input '#', expected ';' or line break",
 		},
 		{
 			"Missing unary in function call",
@@ -352,36 +352,50 @@ func TestParser_Parse(t *testing.T) {
 	}{
 		{
 			"Full Code test",
-			`/* This is a multiline comment
+			`
+
+
+/* This is a multiline comment
 which spans over mutiple lines */
 
 // This is a single line comment
 
 // reserved array method
-func fooBar(int[] a, bool f) int {
-	a = a + 1;
-	return f == a and 5 * 6 * 5 + 32 - 7 * 9 / (4 +5)<= 5 == 4 or (true == false);
+func fooBar(int[] a, 
+
+bool f) 
+
+
+int
+{
+	a = 1 + 6+ f(4+6) + a[3]
+	const int i; const int a
+	const int i ,g
+
+	return 1
+
+
 }
 
 func main() int {
-	int[5] a = [1, 2, 4, 5, 6 + 8];
-	char c = 'g';
-	str s = '\xFF Hello World';
-	bool a = fooBar();
+	int[5] a = [1, 2, 4, 5, 6 + 8]
+	char c = 'g'
+	str s = '\xFF Hello World'
+	bool a = fooBar()
 	if c == 'g' and a {
 		while true {
 			if c == 'g' {
-				continue;
+				continue
 			} else {
-				break;
+				break
 			}
 		}
 	} elif false {
-		pass;
+		pass
 	} else {
-		float x = 0.5;
+		float x = 0.5
 	}
-	return 0;
+	return 0
 }
 `,
 		},

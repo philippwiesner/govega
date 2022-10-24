@@ -10,7 +10,8 @@ type testParserInterface interface {
 	Parser
 	getCurrentToken() *lexicalToken
 	getNextToken() *lexicalToken
-	getToken() error
+	readToken() error
+	getToken() (*lexicalToken, error)
 	lookAHead(tag int) bool
 	matchToken(tag int) bool
 }
@@ -44,7 +45,7 @@ func (t *testParser) getNextToken() *lexicalToken {
 
 func TestParserObject_getLexerError(t *testing.T) {
 	parser := newTestParser([]byte("'blubb\\H'"))
-	err := parser.getToken()
+	err := parser.readToken()
 	vErr := err.(IVError)
 
 	if vErr.GetErrorType() != invalidEscapeSequence {
@@ -55,7 +56,7 @@ func TestParserObject_getLexerError(t *testing.T) {
 func TestParserObject_getEOFToken(t *testing.T) {
 	parser := newTestParser([]byte{})
 
-	err := parser.getToken()
+	err := parser.readToken()
 
 	if err != nil {
 		t.Error(err)
@@ -74,7 +75,7 @@ func TestParserObject_getEOFToken(t *testing.T) {
 func TestParserObject_lookAHead(t *testing.T) {
 	parser := newTestParser([]byte("while if"))
 
-	err := parser.getToken()
+	err := parser.readToken()
 
 	if err != nil {
 		t.Error(err)
