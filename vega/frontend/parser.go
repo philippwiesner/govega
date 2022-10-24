@@ -38,38 +38,27 @@ func (v *vega) NewParser(lexer Lexer) Parser {
 // nextToken. Otherwise, get new lexialToken from lexer. When an error raises return EOF error or set currentToken to
 // eofToken when nil has been returned from lexer.
 func (parser *parser) getToken() error {
+	var (
+		err error
+	)
 	if parser.lexicalError != nil {
 		return parser.lexicalError
 	}
 	if parser.nextToken == nil {
-		token, err := parser.lexer.scan()
-		if err != nil {
+		if parser.currentToken, err = parser.lexer.scan(); err != nil {
 			return err
-		}
-		eofToken := parser.lexer.newLexicalToken(tokens.NewToken(tokens.EOF))
-		if token == nil {
-			parser.currentToken = eofToken
-		} else {
-			parser.currentToken = token
 		}
 	} else {
 		parser.currentToken = parser.nextToken
-		parser.nextToken = nil
+	}
+	if parser.nextToken, err = parser.lexer.scan(); err != nil {
+		return err
 	}
 	return nil
 }
 
 // lookAHead compares a given tag with the next token, only update nextToken when previously match had cleared nextToken
 func (parser *parser) lookAHead(tag int) bool {
-	if parser.lexicalError != nil {
-		return false
-	}
-	if parser.nextToken == nil {
-		parser.nextToken, parser.lexicalError = parser.lexer.scan()
-		if parser.nextToken == nil {
-			return false
-		}
-	}
 	return parser.nextToken.GetTag() == tag
 }
 

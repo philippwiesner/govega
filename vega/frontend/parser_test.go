@@ -1,8 +1,9 @@
 package frontend
 
 import (
-	"govega/vega/language/tokens"
 	"testing"
+
+	"govega/vega/language/tokens"
 )
 
 type testParserInterface interface {
@@ -60,16 +61,24 @@ func TestParserObject_getEOFToken(t *testing.T) {
 		t.Error(err)
 	}
 
-	got := parser.getCurrentToken().GetTag()
+	gotCurrent := parser.getCurrentToken().GetTag()
+	gotNext := parser.getNextToken().GetTag()
 	want := tokens.EOF
 
-	if got != want {
-		t.Fatalf("Expected EOF token %v, but got %v", want, got)
+	if gotCurrent != want && gotNext != want {
+		t.Fatalf("Expected EOF token %v, but got current: %v and next: %v", want, gotCurrent, gotNext)
 	}
+
 }
 
 func TestParserObject_lookAHead(t *testing.T) {
-	parser := newTestParser([]byte("if"))
+	parser := newTestParser([]byte("while if"))
+
+	err := parser.getToken()
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	boolean := parser.lookAHead(tokens.IF)
 
@@ -83,13 +92,7 @@ func TestParserObject_lookAHead(t *testing.T) {
 		t.Fatalf("Token is not %v token, got %v", want, parser.getNextToken().GetToken().String())
 	}
 
-	err := parser.getToken()
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	got := parser.getCurrentToken().GetTag()
+	got := parser.getNextToken().GetTag()
 
 	if want != got && parser.getNextToken() != nil {
 		t.Fatalf("Expected token to be %v, but got %v", want, got)
