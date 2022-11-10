@@ -19,6 +19,8 @@ type Parser interface {
 	parseScope(p Parser) error
 	parseStatement(p Parser) error
 	parseConditionalScope(p Parser) error
+	parseBooleanExpression(p Parser) error
+	parseComparisonExpression(p Parser) error
 	parseExpression(p Parser) error
 	parseTerm(p Parser) error
 	parseFactor(p Parser) error

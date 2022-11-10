@@ -117,9 +117,9 @@ func (parser *parser) Parse(parserInterface Parser) error {
 
 // parseBlock parses block statements
 //
-// block:
-//	(FUNC ID LBRACKET functionParamDeclaration? RBRACKET functionReturnType scopeStatement)+ EOF
-// ;
+// block
+//   : (FUNC ID LBRACKET functionParamDeclaration? RBRACKET functionReturnType scopeStatement)+ EOF
+//   ;
 func (parser *parser) parseBlock(parserInterface Parser) error {
 	if !parser.matchToken(tokens.FUNC) {
 		return parser.syntaxError("Missing 'func' at '%v'")
@@ -155,9 +155,9 @@ func (parser *parser) parseBlock(parserInterface Parser) error {
 
 // parseFunctionParamDeclaration parses function parameter list
 //
-// functionParameterDeclaration:
-//	functionParameterDefinition (COMMA functionParameterDeclaration)*
-// ;
+// functionParameterDeclaration
+//   : functionParameterDefinition (COMMA functionParameterDeclaration)*
+//   ;
 func (parser *parser) parseFunctionParamDeclaration(parserInterface Parser) error {
 	if err := parserInterface.parseFunctionParamDefinition(parserInterface); err != nil {
 		return err
@@ -185,9 +185,9 @@ func (parser *parser) parseFunctionParamDeclaration(parserInterface Parser) erro
 
 // parseFunctionParamDefinition parse function parameter definition
 //
-// functionParameterDefinition:
-//   terminalVariableType (LARRAY RARRAY)* ID
-// ;
+// functionParameterDefinition
+//   : terminalVariableType (LARRAY RARRAY)* ID
+//   ;
 func (parser *parser) parseFunctionParamDefinition(parserInterface Parser) error {
 	if err := parserInterface.parseTerminalVariableType(); err != nil {
 		return err
@@ -208,8 +208,9 @@ func (parser *parser) parseFunctionParamDefinition(parserInterface Parser) error
 
 // parseFunctionReturnType parse return type of function and sets the function identifier symbol type
 //
-// functionReturnType:
-//   terminalVariableType (LARRAY RARRAY)*
+// functionReturnType
+//   : terminalVariableType (LARRAY RARRAY)*
+//   ;
 func (parser *parser) parseFunctionReturnType(parserInterface Parser) error {
 	if err := parserInterface.parseTerminalVariableType(); err != nil {
 		return err
@@ -227,13 +228,13 @@ func (parser *parser) parseFunctionReturnType(parserInterface Parser) error {
 
 // parseTerminalVariableType parse basic variable type terminals
 //
-// terminalVariableType:
-// | INT_TYPE
-// | FLOAT_TYPE
-// | CHAR_TYPE
-// | BOOL_TYPE
-// | STRING_TYPE
-// ;
+// terminalVariableType
+//   : INT_TYPE
+//   | FLOAT_TYPE
+//   | CHAR_TYPE
+//   | BOOL_TYPE
+//   | STRING_TYPE
+//   ;
 func (parser *parser) parseTerminalVariableType() error {
 	switch {
 	case parser.lookAHead(tokens.BASIC):
@@ -268,9 +269,9 @@ func (parser *parser) parseTerminalVariableType() error {
 
 // parseDelimiter parses delimiter characters
 //
-// delimiter:
-//   delimiterCharacters
-// ;
+// delimiter
+//   : delimiterCharacters
+//   ;
 func (parser *parser) parseDelimiter() error {
 	switch {
 	case parser.lookAHead(';'):
@@ -290,9 +291,9 @@ func (parser *parser) parseDelimiter() error {
 
 // parseScope parses scopes
 //
-// scopeStatement:
-//   LCURLY PASS delimiter | (statement)+ RCURLY
-// ;
+// scopeStatement
+//   : LCURLY PASS delimiter | (statement)+ RCURLY
+//   ;
 func (parser *parser) parseScope(parserInterface Parser) error {
 	if !parser.matchToken('{') {
 		return parser.syntaxError("Mismatched input '%v', expected '{'")
@@ -338,13 +339,13 @@ func (parser *parser) parseScope(parserInterface Parser) error {
 
 // parseStatement parses normal statements
 //
-// statement:
-//   CONST? terminalVariableType (LARRAY INT RARRAY)* ID (COMMA ID)* (ASSIGN expression)? DELIMITER
+// statement
+//   : CONST? terminalVariableType (LARRAY INT RARRAY)* ID (ASSIGN booleanExpression)? DELIMITER
 //   |  ID (
-//  		(LBRACKET ( expression (COMMA expression)* )? RBRACKET)
-//  	  | (arrayAccess* (COMMA ID arrayAccess* )* ASSIGN expression)
+//  		(LBRACKET ( booleanExpression (COMMA booleanExpression)* )? RBRACKET)
+//  	  | (arrayAccess* ASSIGN booleanExpression)
 // 	    ) delimiter
-//   |  RETURN expression delimiter
+//   |  RETURN booleanExpression delimiter
 //   |  CONTINUE delimiter
 //   |  BREAK delimiter
 //   |  WHILE conditionalScope
@@ -397,16 +398,16 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 			return parser.syntaxError("lexicalError")
 		}
 		return parserInterface.parseConditionalScope(parserInterface)
-	// statement: RETURN expression delimiter
+	// statement: RETURN booleanExpression delimiter
 	case parser.lookAHead(tokens.RETURN):
 		if !parser.matchToken(tokens.RETURN) {
 			return parser.syntaxError("lexicalError")
 		}
-		if err := parserInterface.parseExpression(parserInterface); err != nil {
+		if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 			return err
 		}
 		return parser.parseDelimiter()
-	// CONST? terminalVariableType (LARRAY INT RARRAY)* ID (COMMA ID)* (ASSIGN expression)? delimiter
+	// CONST? terminalVariableType (LARRAY INT RARRAY)* ID (ASSIGN booleanExpression)? delimiter
 	case parser.lookAHead(tokens.CONST), parser.lookAHead(tokens.BASIC), parser.lookAHead(tokens.TYPE):
 		if parser.lookAHead(tokens.CONST) {
 			if !parser.matchToken(tokens.CONST) {
@@ -431,27 +432,16 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 		if !parser.matchToken(tokens.ID) {
 			return parser.syntaxError("Mismatched input '%v', expected <identifier> or '['")
 		}
-		if parser.lookAHead(',') {
-			for parser.lookAHead(',') {
-				if !parser.matchToken(',') {
-					return parser.syntaxError("lexicalError")
-				}
-				parser.lineBreakDelimiter = true
-				if !parser.matchToken(tokens.ID) {
-					return parser.syntaxError("Mismatched input '%v', expected <identifier>")
-				}
-			}
-		}
 		if parser.lookAHead('=') {
 			if !parser.matchToken('=') {
 				return parser.syntaxError("lexicalError")
 			}
-			if err := parserInterface.parseExpression(parserInterface); err != nil {
+			if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 				return err
 			}
 		}
 		return parser.parseDelimiter()
-	// ID ((LBRACKET ( expression (COMMA expression)* )? RBRACKET) | (arrayAccess* (COMMA ID arrayAccess* )* ASSIGN expression)) delimiter
+	// ID ((LBRACKET ( booleanExpression (COMMA booleanExpression)* )? RBRACKET) | (arrayAccess* ASSIGN booleanExpression)) delimiter
 	case parser.lookAHead(tokens.ID):
 		if !parser.matchToken(tokens.ID) {
 			return parser.syntaxError("lexicalError")
@@ -463,14 +453,14 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 				return parser.syntaxError("lexicalError")
 			}
 			if !parser.lookAHead(')') {
-				if err := parserInterface.parseExpression(parserInterface); err != nil {
+				if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 					return err
 				}
 				for parser.lookAHead(',') {
 					if !parser.matchToken(',') {
 						return parser.syntaxError("Mismatched input '%v', expected ',' or ')'")
 					}
-					if err := parserInterface.parseExpression(parserInterface); err != nil {
+					if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 						return err
 					}
 				}
@@ -486,25 +476,12 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 					return err
 				}
 			}
-			for parser.lookAHead(',') {
-				if !parser.matchToken(',') {
-					return parser.syntaxError("lexicalError")
-				}
-				if !parser.matchToken(tokens.ID) {
-					return parser.syntaxError("Mismatched input '%v', expected <identifier>")
-				}
-				for parser.lookAHead('[') {
-					if err := parserInterface.parseArrayAccess(parserInterface); err != nil {
-						return err
-					}
-				}
-			}
 			fallthrough
 		case parser.lookAHead('='):
 			if !parser.matchToken('=') {
 				return parser.syntaxError("Mismatched input '%v', expected '[', ',' or '='")
 			}
-			if err := parserInterface.parseExpression(parserInterface); err != nil {
+			if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 				return err
 			}
 		default:
@@ -517,88 +494,32 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 	}
 }
 
-// conditionalScope:
-//   expression scopeStatement
-// ;
+// conditionalScope
+//   : booleanExpression scopeStatement
+//   ;
 func (parser *parser) parseConditionalScope(parserInterface Parser) error {
-	if err := parserInterface.parseExpression(parserInterface); err != nil {
+	if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 		return err
 	}
 	return parserInterface.parseScope(parserInterface)
 }
 
-// arrayAccess:
-//   LARRAY expression RARRAY
-// ;
-func (parser *parser) parseArrayAccess(parserInterface Parser) error {
-	if !parser.matchToken('[') {
-		return parser.syntaxError("lexicalError")
-	}
-	if err := parserInterface.parseExpression(parserInterface); err != nil {
-		return err
-	}
-	parser.lineBreakDelimiter = true
-	if !parser.matchToken(']') {
-		return parser.syntaxError("Mismatched input '%v', expected ']'")
-	}
-	return nil
-}
-
-// expression:
-//   term (PLUS term | MINUS term | OR term)*
-// ;
-func (parser *parser) parseExpression(parserInterface Parser) error {
-	if err := parserInterface.parseTerm(parserInterface); err != nil {
+// booleanExpression
+//   :   comparisonExpression ((OR | AND) comparisonExpression)*
+//   ;
+func (parser *parser) parseBooleanExpression(parserInterface Parser) error {
+	if err := parserInterface.parseComparisonExpression(parserInterface); err != nil {
 		return err
 	}
 	var loopControl = false
 	for {
 		switch {
-		case parser.lookAHead('+'):
-			if !parser.matchToken('+') {
-				return parser.syntaxError("lexicalError")
-			}
-		case parser.lookAHead('-'):
-			if !parser.matchToken('-') {
-				return parser.syntaxError("lexicalError")
-			}
 		case parser.lookAHead(tokens.OR):
 			if !parser.matchToken(tokens.OR) {
 				return parser.syntaxError("lexicalError")
 			}
 		case parser.lookAHead(tokens.BOOLOR):
 			if !parser.matchToken(tokens.BOOLOR) {
-				return parser.syntaxError("lexicalError")
-			}
-		default:
-			loopControl = true
-		}
-		if loopControl {
-			break
-		}
-		if err := parserInterface.parseTerm(parserInterface); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// term:
-//   factor (MULT factor | DIV factor | AND factor)*
-// ;
-func (parser *parser) parseTerm(parserInterface Parser) error {
-	if err := parserInterface.parseFactor(parserInterface); err != nil {
-		return err
-	}
-	var loopControl = true
-	for loopControl {
-		switch {
-		case parser.lookAHead('*'):
-			if !parser.matchToken('*') {
-				return parser.syntaxError("lexicalError")
-			}
-		case parser.lookAHead('/'):
-			if !parser.matchToken('/') {
 				return parser.syntaxError("lexicalError")
 			}
 		case parser.lookAHead(tokens.AND):
@@ -610,41 +531,27 @@ func (parser *parser) parseTerm(parserInterface Parser) error {
 				return parser.syntaxError("lexicalError")
 			}
 		default:
-			loopControl = false
+			loopControl = true
 		}
-		if !loopControl {
+		if loopControl {
 			break
 		}
-		if err := parserInterface.parseFactor(parserInterface); err != nil {
+		if err := parserInterface.parseComparisonExpression(parserInterface); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// factor:
-//   (NOT|MINUS)? unary (comparisonOperator unary)*
+// comparisonExpression
+// :   expression (comparisonOperator expression)*
 // ;
-func (parser *parser) parseFactor(parserInterface Parser) error {
-	switch {
-	case parser.lookAHead('!'):
-		if !parser.matchToken('!') {
-			return parser.syntaxError("lexicalError")
-		}
-	case parser.lookAHead(tokens.NOT):
-		if !parser.matchToken(tokens.NOT) {
-			return parser.syntaxError("lexicalError")
-		}
-	case parser.lookAHead('-'):
-		if !parser.matchToken('-') {
-			return parser.syntaxError("lexicalError")
-		}
-	}
-	if err := parserInterface.parseUnary(parserInterface); err != nil {
+func (parser *parser) parseComparisonExpression(parserInterface Parser) error {
+	if err := parserInterface.parseExpression(parserInterface); err != nil {
 		return err
 	}
-	var loopControl = true
-	for loopControl {
+	var loopControl = false
+	for {
 		switch {
 		case parser.lookAHead(tokens.EQ):
 			if !parser.matchToken(tokens.EQ) {
@@ -671,24 +578,120 @@ func (parser *parser) parseFactor(parserInterface Parser) error {
 				return parser.syntaxError("lexicalError")
 			}
 		default:
-			loopControl = false
+			loopControl = true
 		}
-		if !loopControl {
+		if loopControl {
 			break
 		}
-		if err := parserInterface.parseUnary(parserInterface); err != nil {
+		if err := parserInterface.parseExpression(parserInterface); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// unary:
-//    (BASIC | TRUE | FALSE | LITERAL)
-//  | ID arrayAccess?
-//  | ID LBRACKET ( expression (COMMA expression)* )? RBRACKET   // func call
-//  | LBRACKET expression RBRACKET
-//  | LARRAY (expression (COMMA expression)* )? RARRAY           // set array value
+// arrayAccess
+// : LARRAY expression RARRAY
+// ;
+func (parser *parser) parseArrayAccess(parserInterface Parser) error {
+	if !parser.matchToken('[') {
+		return parser.syntaxError("lexicalError")
+	}
+	if err := parserInterface.parseExpression(parserInterface); err != nil {
+		return err
+	}
+	parser.lineBreakDelimiter = true
+	if !parser.matchToken(']') {
+		return parser.syntaxError("Mismatched input '%v', expected ']'")
+	}
+	return nil
+}
+
+// expression
+// : term ((PLUS | MINUS) term)*
+// ;
+func (parser *parser) parseExpression(parserInterface Parser) error {
+	if err := parserInterface.parseTerm(parserInterface); err != nil {
+		return err
+	}
+	var loopControl = false
+	for {
+		switch {
+		case parser.lookAHead('+'):
+			if !parser.matchToken('+') {
+				return parser.syntaxError("lexicalError")
+			}
+		case parser.lookAHead('-'):
+			if !parser.matchToken('-') {
+				return parser.syntaxError("lexicalError")
+			}
+		default:
+			loopControl = true
+		}
+		if loopControl {
+			break
+		}
+		if err := parserInterface.parseTerm(parserInterface); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// term
+// : factor ((MULT | DIV) factor)*
+// ;
+func (parser *parser) parseTerm(parserInterface Parser) error {
+	if err := parserInterface.parseFactor(parserInterface); err != nil {
+		return err
+	}
+	var loopControl = false
+	for loopControl {
+		switch {
+		case parser.lookAHead('*'):
+			if !parser.matchToken('*') {
+				return parser.syntaxError("lexicalError")
+			}
+		case parser.lookAHead('/'):
+			if !parser.matchToken('/') {
+				return parser.syntaxError("lexicalError")
+			}
+		default:
+			loopControl = true
+		}
+		if loopControl {
+			break
+		}
+		if err := parserInterface.parseFactor(parserInterface); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// factor
+// : (MINUS | NOT)? unary
+// ;
+func (parser *parser) parseFactor(parserInterface Parser) error {
+	switch {
+	case parser.lookAHead('!'):
+		if !parser.matchToken('!') {
+			return parser.syntaxError("lexicalError")
+		}
+	case parser.lookAHead(tokens.NOT):
+		if !parser.matchToken(tokens.NOT) {
+			return parser.syntaxError("lexicalError")
+		}
+	}
+	return parserInterface.parseUnary(parserInterface)
+}
+
+// unary
+// : (BASIC | TRUE | FALSE | LITERAL)
+// | ID arrayAccess?
+// | ID LBRACKET ( booleanExpression (COMMA booleanExpression)* )? RBRACKET   // func call
+// | LBRACKET booleanExpression RBRACKET
+// | LARRAY (expression (COMMA expression)* )? RARRAY           // set array value
 // ;
 func (parser *parser) parseUnary(parserInterface Parser) error {
 	switch {
@@ -702,20 +705,20 @@ func (parser *parser) parseUnary(parserInterface Parser) error {
 			if err := parserInterface.parseArrayAccess(parserInterface); err != nil {
 				return err
 			}
-			// LBRACKET ( expression (COMMA expression)* )? RBRACKET
+			// LBRACKET ( booleanExpression (COMMA booleanExpression)* )? RBRACKET
 		} else if parser.lookAHead('(') {
 			if !parser.matchToken('(') {
 				return parser.syntaxError("lexicalError")
 			}
 			if !parser.lookAHead(')') {
-				if err := parserInterface.parseExpression(parserInterface); err != nil {
+				if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 					return err
 				}
 				for parser.lookAHead(',') {
 					if !parser.matchToken(',') {
 						return parser.syntaxError("lexicalError")
 					}
-					if err := parserInterface.parseExpression(parserInterface); err != nil {
+					if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 						return err
 					}
 				}
@@ -725,12 +728,12 @@ func (parser *parser) parseUnary(parserInterface Parser) error {
 				return parser.syntaxError("Mismatched input '%v', expected ',' or ')'")
 			}
 		}
-	// LBRACKET expression RBRACKET
+	// LBRACKET booleanExpression RBRACKET
 	case parser.lookAHead('('):
 		if !parser.matchToken('(') {
 			return parser.syntaxError("lexicalError")
 		}
-		if err := parserInterface.parseExpression(parserInterface); err != nil {
+		if err := parserInterface.parseBooleanExpression(parserInterface); err != nil {
 			return err
 		}
 		parser.lineBreakDelimiter = true

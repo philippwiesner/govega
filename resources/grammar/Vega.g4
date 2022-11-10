@@ -17,14 +17,14 @@ functionReturnType
     ;
 
 scopeStatement
-    :   LCURLY PASS DELIMITER | (statement)+ RCURLY
+    :   LCURLY ((PASS DELIMITER) | (statement)+) RCURLY
     ;
 
 statement
-	:	CONST? terminalVariableType (LARRAY INT RARRAY)* ID (COMMA ID)* (ASSIGN expression)? DELIMITER
-	|   ID arrayAccess* (COMMA ID arrayAccess* )* ASSIGN expression DELIMITER
+	:	CONST? terminalVariableType (LARRAY INT RARRAY)* ID (ASSIGN booleanExpression)? DELIMITER
+	|   ID arrayAccess* ASSIGN booleanExpression DELIMITER
 	|   ID funcCall
-	|   RETURN expression DELIMITER
+	|   RETURN booleanExpression DELIMITER
 	|   CONTINUE DELIMITER
 	|   BREAK DELIMITER
 	|	WHILE conditionalScope
@@ -32,31 +32,39 @@ statement
 	;
 
 conditionalScope
-    :   expression scopeStatement
+    :   booleanExpression scopeStatement
+    ;
+
+booleanExpression
+    :   comparisonExpression ((OR | AND) comparisonExpression)*
+    ;
+
+comparisonExpression
+    :   expression (comparisonOperator expression)*
     ;
 
 expression
-    :   term (PLUS term | MINUS term | OR term)*
+    :   term ((PLUS | MINUS) term)*
     ;
 
 term
-    :	factor (MULT factor | DIV factor| AND factor)*
+    :	factor ((MULT | DIV) factor)*
 	;
 
 factor
-    :   (NOT|MINUS)? unary (comparisonOperator unary)*
+    :   (MINUS  |NOT)? unary
     ;
 
 unary
     :   terminal
     |   ID arrayAccess? // potential array access
     |   ID funcCall
-    |   LBRACKET expression RBRACKET
+    |   LBRACKET booleanExpression RBRACKET
     |   LARRAY (expression (COMMA expression)*)? RARRAY
     ;
 
 funcCall
-    :   LBRACKET ( expression (COMMA expression)*)? RBRACKET
+    :   LBRACKET ( booleanExpression (COMMA booleanExpression)*)? RBRACKET
     ;
 
 arrayAccess
@@ -148,6 +156,7 @@ NOTEQUAL
     ;
 DELIMITER
     :   ';'
+    |   '\n'
     ;
 
 // Words

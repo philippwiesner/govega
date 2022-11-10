@@ -193,16 +193,6 @@ func TestParser_ParseError(t *testing.T) {
 			"Mismatched input '#', expected ';' or line break",
 		},
 		{
-			"Missing second identifier after comma",
-			"func test(int []a, int b) int { int[8] a,#",
-			"Mismatched input '#', expected <identifier>",
-		},
-		{
-			"Wrong right hand assigment definition",
-			"func test(int []a, int b) int { int[8] a, b = #",
-			"Mismatched input '#', expected <unary>",
-		},
-		{
 			"Missing delimiter after declaration assignment",
 			"func test(int []a, int b) int { int[8] a = 5#",
 			"Mismatched input '#', expected ';' or line break",
@@ -243,28 +233,13 @@ func TestParser_ParseError(t *testing.T) {
 			"Mismatched input '#', expected <unary>",
 		},
 		{
-			"No identifier after coma",
-			"func test(int []a, int b) int { a[b], #",
-			"Mismatched input '#', expected <identifier>",
-		},
-		{
-			"Missing array access, coma or assignment",
-			"func test(int []a, int b) int { a[b], c#",
-			"Mismatched input '#', expected '[', ',' or '='",
-		},
-		{
-			"Missing closing array bracket",
-			"func test(int []a, int b) int { a[b], c[d#",
-			"Mismatched input '#', expected ']'",
-		},
-		{
 			"Missing assignment expression",
-			"func test(int []a, int b) int { a[b], c[d] = #",
+			"func test(int []a, int b) int { a[b] = #",
 			"Mismatched input '#', expected <unary>",
 		},
 		{
 			"Missing delimiter",
-			"func test(int []a, int b) int { a[b], c[d] = 5#",
+			"func test(int []a, int b) int { a[b] = 5#",
 			"Mismatched input '#', expected ';' or line break",
 		},
 		{
@@ -369,8 +344,10 @@ bool f)
 int
 {
 	a = 1 + 6+ f(4+6) + a[3]
+	b = true == not false != false or false and true
 	const int i; const int a
-	const int i ,g
+	const int i
+	const int g
 
 	return 1
 
@@ -395,6 +372,7 @@ func main() int {
 	} else {
 		float x = 0.5
 	}
+
 	return 0
 }
 `,
