@@ -23,6 +23,9 @@ const (
 	IF                        // if
 	ELIF                      // elif
 	ELSE                      // else
+	SWITCH                    // switch
+	CASE                      // case
+	DEFAULT                   // default
 	RETURN                    // return
 	PASS                      // pass
 	CONTINUE                  // continue

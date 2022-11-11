@@ -350,6 +350,7 @@ func (parser *parser) parseScope(parserInterface Parser) error {
 //   |  BREAK delimiter
 //   |  WHILE conditionalScope
 //   |  IF conditionalScope (ELIF conditionalScope)* (ELSE scopeStatement)?
+//   |  SWITCH booleanExpression LCURLY (CASE terminal COLON statement+)+ (DEFAULT COLON statement+)? RCURLY
 // ;
 func (parser *parser) parseStatement(parserInterface Parser) error {
 	switch {
@@ -390,6 +391,97 @@ func (parser *parser) parseStatement(parserInterface Parser) error {
 			if err := parserInterface.parseScope(parserInterface); err != nil {
 				return err
 			}
+		}
+		return nil
+	// statement: SWITCH expression LCURLY (CASE terminal COLON statement+)+ (DEFAULT COLON statement+)? RCURLY
+	case parser.lookAHead(tokens.SWITCH):
+		if !parser.matchToken(tokens.SWITCH) {
+			return parser.syntaxError("lexicalError")
+		}
+		if err := parserInterface.parseExpression(parserInterface); err != nil {
+			return err
+		}
+		if !parser.matchToken('{') {
+			return parser.syntaxError("Mismatched input '%v', expected '{'")
+		}
+		if !parser.matchToken(tokens.CASE) {
+			return parser.syntaxError("Mismatched input '%v', expected 'case' or 'default'")
+		}
+		if err := parserInterface.parseTerminal(); err != nil {
+			return err
+		}
+		if !parser.matchToken(':') {
+			return parser.syntaxError("Mismatched input '%v', expected ':'")
+		}
+		if err := parserInterface.parseStatement(parserInterface); err != nil {
+			if err.Error() == "StatementNotDefined" {
+				_ = parser.matchToken(-1)
+				return parser.syntaxError("Mismatched input '%v', expected <statement>")
+			}
+			return err
+		}
+		for !parser.lookAHead('}') && !parser.lookAHead(tokens.CASE) && !parser.lookAHead(tokens.DEFAULT) {
+			if err := parserInterface.parseStatement(parserInterface); err != nil {
+				if err.Error() == "StatementNotDefined" {
+					_ = parser.matchToken(-1)
+					return parser.syntaxError("Mismatched input '%v', expected <statement>, another 'case' or 'default' keyword or '}'")
+				}
+				return err
+			}
+		}
+		for parser.lookAHead(tokens.CASE) {
+			if !parser.matchToken(tokens.CASE) {
+				return parser.syntaxError("lexicalError")
+			}
+			if err := parserInterface.parseTerminal(); err != nil {
+				return err
+			}
+			if !parser.matchToken(':') {
+				return parser.syntaxError("Mismatched input '%v', expected ':'")
+			}
+			if err := parserInterface.parseStatement(parserInterface); err != nil {
+				if err.Error() == "StatementNotDefined" {
+					_ = parser.matchToken(-1)
+					return parser.syntaxError("Mismatched input '%v', expected <statement>")
+				}
+				return err
+			}
+			for !parser.lookAHead('}') && !parser.lookAHead(tokens.CASE) && !parser.lookAHead(tokens.DEFAULT) {
+				if err := parserInterface.parseStatement(parserInterface); err != nil {
+					if err.Error() == "StatementNotDefined" {
+						_ = parser.matchToken(-1)
+						return parser.syntaxError("Mismatched input '%v', expected <statement>, another 'case' or 'default' keyword or '}'")
+					}
+					return err
+				}
+			}
+		}
+		if parser.lookAHead(tokens.DEFAULT) {
+			if !parser.matchToken(tokens.DEFAULT) {
+				return parser.syntaxError("lexicalError")
+			}
+			if !parser.matchToken(':') {
+				return parser.syntaxError("Mismatched input '%v', expected ':'")
+			}
+			if err := parserInterface.parseStatement(parserInterface); err != nil {
+				if err.Error() == "StatementNotDefined" {
+					_ = parser.matchToken(-1)
+					return parser.syntaxError("Mismatched input '%v', expected <statement>")
+				}
+				return err
+			}
+			for !parser.lookAHead('}') {
+				if err := parserInterface.parseStatement(parserInterface); err != nil {
+					if err.Error() == "StatementNotDefined" {
+						_ = parser.matchToken(-1)
+						return parser.syntaxError("Mismatched input '%v', expected <statement> or '}'")
+					}
+					return err
+				}
+			}
+		}
+		if !parser.matchToken('}') {
+			return parser.syntaxError("lexicalError")
 		}
 		return nil
 	// statement: WHILE conditionalScope
@@ -760,34 +852,48 @@ func (parser *parser) parseUnary(parserInterface Parser) error {
 		if !parser.matchToken(']') {
 			return parser.syntaxError("Mismatched input '%v', expected ',' or ']'")
 		}
-	// NUM | FLOAT | TRUE | FALSE | LITERAL
+	//
 	default:
-		parser.lineBreakDelimiter = true
-		switch {
-		case parser.lookAHead(tokens.NUM):
-			if !parser.matchToken(tokens.NUM) {
-				return parser.syntaxError("lexicalError")
-			}
-		case parser.lookAHead(tokens.REAL):
-			if !parser.matchToken(tokens.REAL) {
-				return parser.syntaxError("lexicalError")
-			}
-		case parser.lookAHead(tokens.TRUE):
-			if !parser.matchToken(tokens.TRUE) {
-				return parser.syntaxError("lexicalError")
-			}
-		case parser.lookAHead(tokens.FALSE):
-			if !parser.matchToken(tokens.FALSE) {
-				return parser.syntaxError("lexicalError")
-			}
-		case parser.lookAHead(tokens.LITERAL):
-			if !parser.matchToken(tokens.LITERAL) {
-				return parser.syntaxError("lexicalError")
-			}
-		default:
-			_ = parser.matchToken(-1)
+		if err := parserInterface.parseTerminal(); err != nil {
 			return parser.syntaxError("Mismatched input '%v', expected <unary>")
 		}
+	}
+	return nil
+}
+
+// terminal
+//   : NUM
+//   | FLOAT
+//   | TRUE
+//   | FALSE
+//   | LITERAL
+//   ;
+func (parser *parser) parseTerminal() error {
+	parser.lineBreakDelimiter = true
+	switch {
+	case parser.lookAHead(tokens.NUM):
+		if !parser.matchToken(tokens.NUM) {
+			return parser.syntaxError("lexicalError")
+		}
+	case parser.lookAHead(tokens.REAL):
+		if !parser.matchToken(tokens.REAL) {
+			return parser.syntaxError("lexicalError")
+		}
+	case parser.lookAHead(tokens.TRUE):
+		if !parser.matchToken(tokens.TRUE) {
+			return parser.syntaxError("lexicalError")
+		}
+	case parser.lookAHead(tokens.FALSE):
+		if !parser.matchToken(tokens.FALSE) {
+			return parser.syntaxError("lexicalError")
+		}
+	case parser.lookAHead(tokens.LITERAL):
+		if !parser.matchToken(tokens.LITERAL) {
+			return parser.syntaxError("lexicalError")
+		}
+	default:
+		_ = parser.matchToken(-1)
+		return parser.syntaxError("Mismatched input '%v', expected <terminal>")
 	}
 	return nil
 }

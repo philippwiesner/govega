@@ -25,6 +25,7 @@ type Parser interface {
 	parseTerm(p Parser) error
 	parseFactor(p Parser) error
 	parseUnary(p Parser) error
+	parseTerminal() error
 }
 
 type Lexer interface {

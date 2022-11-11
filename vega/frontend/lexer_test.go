@@ -3,10 +3,11 @@ package frontend
 import (
 	"bytes"
 	"fmt"
-	"govega/vega/language"
-	"govega/vega/language/tokens"
 	"reflect"
 	"testing"
+
+	"govega/vega/language"
+	"govega/vega/language/tokens"
 )
 
 type testLexerInterface interface {
@@ -354,15 +355,18 @@ func TestLexer_Scan(t *testing.T) {
 			"}",
 			4,
 			[]interface{}{
+				tokens.NewToken('\n'),
 				tokens.NewWord("func", tokens.FUNC),
 				tokens.NewWord("test", tokens.ID),
 				tokens.NewToken('('),
 				tokens.NewToken(')'),
 				language.BoolType,
 				tokens.NewToken('{'),
+				tokens.NewToken('\n'),
 				tokens.NewWord("return", tokens.RETURN),
 				tokens.NewWord("true", tokens.TRUE),
 				tokens.NewToken(';'),
+				tokens.NewToken('\n'),
 				tokens.NewToken('}'),
 				tokens.NewToken(tokens.EOF),
 			}},

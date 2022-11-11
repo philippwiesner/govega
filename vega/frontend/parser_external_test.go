@@ -108,7 +108,7 @@ func TestParser_ParseError(t *testing.T) {
 			"Mismatched input 'break', expected '}'",
 		},
 		{
-			"No valid expression",
+			"Missing if conditional",
 			"func test(int []a, int b) int { if #",
 			"Mismatched input '#', expected <unary>",
 		},
@@ -136,6 +136,56 @@ func TestParser_ParseError(t *testing.T) {
 			"Missing conditional else statement body",
 			"func test(int []a, int b) int { if true { pass; } else #",
 			"Mismatched input '#', expected '{'",
+		},
+		{
+			"Missing switch expression",
+			"func test() int { switch #",
+			"Mismatched input '#', expected <unary>",
+		},
+		{
+			"Missing open switch scope",
+			"func test() int { switch a #",
+			"Mismatched input '#', expected '{'",
+		},
+		{
+			"Missing case or default",
+			"func test() int { switch a { #",
+			"Mismatched input '#', expected 'case' or 'default'",
+		},
+		{
+			"Missing case terminal",
+			"func test() int { switch a { case #",
+			"Mismatched input '#', expected <terminal>",
+		},
+		{
+			"Missing colon after case",
+			"func test() int { switch a { case 1#",
+			"Mismatched input '#', expected ':'",
+		},
+		{
+			"No statement in case",
+			"func test() int { switch a { case 1: #",
+			"Mismatched input '#', expected <statement>",
+		},
+		{
+			"No valid second statement in case",
+			"func test() int { switch a { case 1: continue; #",
+			"Mismatched input '#', expected <statement>, another 'case' or 'default' keyword or '}'",
+		},
+		{
+			"Missing colon after default",
+			"func test() int { switch a { case 1: break; default #",
+			"Mismatched input '#', expected ':'",
+		},
+		{
+			"Missing statement after default",
+			"func test() int { switch a { case 1: break; default: #",
+			"Mismatched input '#', expected <statement>",
+		},
+		{
+			"No valid second statement after default or closing bracket",
+			"func test() int { switch a { case 1: break; default: continue; #",
+			"Mismatched input '#', expected <statement> or '}'",
 		},
 		{
 			"Missing while conditional",
@@ -348,6 +398,24 @@ int
 	const int i; const int a
 	const int i
 	const int g
+
+	switch a {
+	case 'a':
+		return 2
+	case 'b':
+		int a;
+		return 23
+	default:
+		return 0
+	}
+
+	switch a {
+	case 'a':
+		return 2
+	case 'b':
+		int a;
+		return 23
+	}
 
 	return 1
 

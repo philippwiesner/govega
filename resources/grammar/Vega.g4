@@ -29,6 +29,7 @@ statement
 	|   BREAK DELIMITER
 	|	WHILE conditionalScope
 	|	IF conditionalScope (ELIF conditionalScope)* (ELSE scopeStatement)?
+	|   SWITCH expression LCURLY (CASE terminal COLON statement+)+ (DEFAULT COLON statement+)? RCURLY
 	;
 
 conditionalScope
@@ -177,6 +178,15 @@ ELIF
     ;
 ELSE
     :   'else'
+    ;
+SWITCH
+    :   'switch'
+    ;
+CASE
+    :   'case'
+    ;
+DEFAULT
+    :   'default'
     ;
 RETURN
     :   'return'
