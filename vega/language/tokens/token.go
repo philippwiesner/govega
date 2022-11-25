@@ -10,41 +10,90 @@ import (
 	"fmt"
 )
 
+// TODO tok type
+// type tok int
+
 // token tag constants for identifying tokens. numbering start at 256 as the integers 0-255 represent runes (chars)
 const (
-	EOF      int = iota + 256 // end of file
-	EQ                        // ==
-	LE                        // <=
-	GE                        // >=
-	NE                        // !=
-	CONST                     // const
-	FUNC                      // func
-	WHILE                     // while
-	IF                        // if
-	ELIF                      // elif
-	ELSE                      // else
-	SWITCH                    // switch
-	CASE                      // case
-	DEFAULT                   // default
-	RETURN                    // return
-	PASS                      // pass
-	CONTINUE                  // continue
-	BREAK                     // break
-	TRUE                      // true
-	FALSE                     // false
-	NOT                       // not
-	AND                       // and
-	BOOLAND                   // &&
-	OR                        // or
-	BOOLOR                    // ||
-	INDEX                     // [i]
-	ID                        // identifier
-	BASIC                     // basic data type (e.g. int, char)
-	TYPE                      // non-basic data types (e.g. string, array)
-	NUM                       // normal numbers (int)
-	REAL                      // real numbers (floating point)
-	LITERAL                   // everything enclosed in '' or ""
+	EOF      int = iota // end of file
+	EQ                  // ==
+	LE                  // <=
+	GE                  // >=
+	NE                  // !=
+	CONST               // const
+	FUNC                // func
+	WHILE               // while
+	IF                  // if
+	ELIF                // elif
+	ELSE                // else
+	SWITCH              // switch
+	CASE                // case
+	DEFAULT             // default
+	RETURN              // return
+	PASS                // pass
+	CONTINUE            // continue
+	BREAK               // break
+	TRUE                // true
+	FALSE               // false
+	NOT                 // not
+	AND                 // and
+	BOOLAND             // &&
+	OR                  // or
+	BOOLOR              // ||
+	INDEX               // [i]
+	ID                  // identifier
+	BASIC               // basic data type (e.g. int, char)
+	TYPE                // non-basic data types (e.g. string, array)
+	NUM                 // normal numbers (int)
+	REAL                // real numbers (floating point)
+	LITERAL             // everything enclosed in '' or ""
+
+	single_sign_start
+	ASSIGN      // =
+	LINEBREAK   // \n
+	DELIMITER   // ;
+	ADD         // +
+	MULT        // *
+	DIV         // /
+	SUB         // -
+	LESS        // <
+	GREATER     // >
+	EXCLAMATION // !
+	LCBRACKET   // {
+	RCBRACKET   // }
+	LSBRACKET   // [
+	RSBRACKET   // ]
+	LBRACKET    // (
+	RBRACKET    // )
+	COLON       // :
+	LOGOR       // |
+	LOGAND      // &
+	COMMA       // ,
+	single_sign_end
 )
+
+var singleSignString = [...]string{
+	ASSIGN:      "=",
+	LINEBREAK:   "\n",
+	DELIMITER:   ";",
+	ADD:         "+",
+	MULT:        "*",
+	DIV:         "/",
+	SUB:         "-",
+	LESS:        "<",
+	GREATER:     ">",
+	EXCLAMATION: "!",
+	LCBRACKET:   "{",
+	RCBRACKET:   "}",
+	LSBRACKET:   "[",
+	RSBRACKET:   "]",
+	LBRACKET:    "(",
+	RBRACKET:    ")",
+	COLON:       ":",
+	LOGOR:       "|",
+	LOGAND:      "&",
+	COMMA:       ",",
+}
 
 // token struct represents simple basic language tokens identified by an integer number
 type token struct {
@@ -63,7 +112,11 @@ func (t *token) GetTag() int {
 
 // String print token as string
 func (t *token) String() string {
-	return string(rune(t.tag))
+	if t.tag > single_sign_start && t.tag < single_sign_end {
+		return singleSignString[t.tag]
+	} else {
+		return string(rune(t.tag))
+	}
 }
 
 // num is a numeric tokens

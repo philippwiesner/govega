@@ -87,8 +87,7 @@ func (l *lexer) newLexicalToken(token tokens.IToken) *lexicalToken {
 // unreadch private method to put the last read character back on the code stream (revert previous readch)
 func (l *lexer) unreadch() error {
 	if !l.eof {
-		err := l.code.UnreadRune()
-		if err != nil {
+		if err := l.code.UnreadRune(); err != nil {
 			return err
 		}
 		l.lineFeed = l.lineFeed[:len(l.lineFeed)-1]
@@ -138,7 +137,22 @@ func (l *lexer) scanCombinedTokens(fch rune, sch rune, word tokens.IWord) (*lexi
 	if ok {
 		return l.newLexicalToken(word), nil
 	} else {
-		return l.newLexicalToken(tokens.NewToken(int(fch))), nil
+		var tok tokens.IToken
+		switch fch {
+		case '!':
+			tok = tokens.NewToken(tokens.EXCLAMATION)
+		case '=':
+			tok = tokens.NewToken(tokens.ASSIGN)
+		case '<':
+			tok = tokens.NewToken(tokens.LESS)
+		case '>':
+			tok = tokens.NewToken(tokens.GREATER)
+		case '|':
+			tok = tokens.NewToken(tokens.LOGOR)
+		case '&':
+			tok = tokens.NewToken(tokens.LOGAND)
+		}
+		return l.newLexicalToken(tok), nil
 	}
 }
 
@@ -359,7 +373,7 @@ func (l *lexer) scanComments() (*lexicalToken, error) {
 			return nil, err
 		}
 	} else {
-		return l.newLexicalToken(tokens.NewToken('/')), nil
+		return l.newLexicalToken(tokens.NewToken(tokens.DIV)), nil
 	}
 	return nil, nil
 }
@@ -374,7 +388,7 @@ func (l *lexer) scan() (*lexicalToken, error) {
 		switch {
 		// skip line breaks
 		case l.peek == '\n':
-			token := l.newLexicalToken(tokens.NewToken('\n'))
+			token := l.newLexicalToken(tokens.NewToken(tokens.LINEBREAK))
 			l.codeLines = append(l.codeLines, l.lineFeed)
 			l.lineFeed = ""
 			l.position = 0
@@ -426,9 +440,45 @@ func (l *lexer) scan() (*lexicalToken, error) {
 			}
 			err = l.unreadch()
 			return tok, err
-		// read every token left
+			// read +
+		case l.peek == '+':
+			return l.newLexicalToken(tokens.NewToken(tokens.ADD)), nil
+			// read -
+		case l.peek == '-':
+			return l.newLexicalToken(tokens.NewToken(tokens.SUB)), nil
+			// read *
+		case l.peek == '*':
+			return l.newLexicalToken(tokens.NewToken(tokens.MULT)), nil
+			// read {
+		case l.peek == '{':
+			return l.newLexicalToken(tokens.NewToken(tokens.LCBRACKET)), nil
+			// read }
+		case l.peek == '}':
+			return l.newLexicalToken(tokens.NewToken(tokens.RCBRACKET)), nil
+			// read [
+		case l.peek == '[':
+			return l.newLexicalToken(tokens.NewToken(tokens.LSBRACKET)), nil
+			// read ]
+		case l.peek == ']':
+			return l.newLexicalToken(tokens.NewToken(tokens.RSBRACKET)), nil
+			// read (
+		case l.peek == '(':
+			return l.newLexicalToken(tokens.NewToken(tokens.LBRACKET)), nil
+			// read )
+		case l.peek == ')':
+			return l.newLexicalToken(tokens.NewToken(tokens.RBRACKET)), nil
+			// read ;
+		case l.peek == ';':
+			return l.newLexicalToken(tokens.NewToken(tokens.DELIMITER)), nil
+			// read :
+		case l.peek == ':':
+			return l.newLexicalToken(tokens.NewToken(tokens.COLON)), nil
+			// read ,
+		case l.peek == ',':
+			return l.newLexicalToken(tokens.NewToken(tokens.COMMA)), nil
+		// token not in alphabet
 		default:
-			return l.newLexicalToken(tokens.NewToken(int(l.peek))), nil
+			return nil, l.newLexicalSyntaxError(invalidCharacter, l.line, l.position, "Invalid character")
 		}
 		if err != nil {
 			return nil, err

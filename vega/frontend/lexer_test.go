@@ -112,7 +112,7 @@ func TestCombinedTokens(t *testing.T) {
 		want int
 	}{
 		{"!=", tokens.NE},
-		{"!-", '!'},
+		{"!-", tokens.EXCLAMATION},
 	}
 
 	for i, tc := range tests {
@@ -355,19 +355,19 @@ func TestLexer_Scan(t *testing.T) {
 			"}",
 			4,
 			[]interface{}{
-				tokens.NewToken('\n'),
+				tokens.NewToken(tokens.LINEBREAK),
 				tokens.NewWord("func", tokens.FUNC),
 				tokens.NewWord("test", tokens.ID),
-				tokens.NewToken('('),
-				tokens.NewToken(')'),
+				tokens.NewToken(tokens.LBRACKET),
+				tokens.NewToken(tokens.RBRACKET),
 				language.BoolType,
-				tokens.NewToken('{'),
-				tokens.NewToken('\n'),
+				tokens.NewToken(tokens.LCBRACKET),
+				tokens.NewToken(tokens.LINEBREAK),
 				tokens.NewWord("return", tokens.RETURN),
 				tokens.NewWord("true", tokens.TRUE),
-				tokens.NewToken(';'),
-				tokens.NewToken('\n'),
-				tokens.NewToken('}'),
+				tokens.NewToken(tokens.DELIMITER),
+				tokens.NewToken(tokens.LINEBREAK),
+				tokens.NewToken(tokens.RCBRACKET),
 				tokens.NewToken(tokens.EOF),
 			}},
 	}

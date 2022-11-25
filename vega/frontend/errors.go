@@ -17,6 +17,7 @@ const (
 	malformedCode                    VErrorType = "MalformedCode"
 	unexpectedEOF                    VErrorType = "UnexpectedEOF"
 	literalNotTerminated             VErrorType = "LiteralNotTerminated"
+	invalidCharacter                 VErrorType = "InvalidCharacter"
 	invalidEscapeSequence            VErrorType = "InvalidEscapeSequence"
 	invalidEscapeSequenceLiteral     VErrorType = "InvalidEscapeSequenceLiteral"
 	invalidEscapeSequenceHexadecimal VErrorType = "InvalidEscapeSequenceHexadecimal"
