@@ -1,18 +1,19 @@
 package utils
 
 import (
-	"govega/vega/language"
 	"testing"
+
+	types2 "govega/vega/types"
 )
 
 func TestNewScope(t *testing.T) {
 	inMain := []*Symbol{
-		NewSymbol("var1", language.IntType, false, false),
-		NewSymbol("var2", language.CharType, false, true),
+		NewSymbol("var1", types2.IntType, false, false),
+		NewSymbol("var2", types2.CharType, false, true),
 	}
 	inSub := []*Symbol{
-		NewSymbol("var3", language.FloatType, false, false),
-		NewSymbol("var4", language.NewString(6), true, false),
+		NewSymbol("var3", types2.FloatType, false, false),
+		NewSymbol("var4", types2.NewString(6), true, false),
 	}
 
 	table := NewSymbolTable()
@@ -31,7 +32,7 @@ func TestNewScope(t *testing.T) {
 		t.Fatalf("Element var1 not found")
 	}
 
-	if var1.SymbolType != language.IntType || var1.Callable != false || var1.Const != false {
+	if var1.SymbolType != types2.IntType || var1.Callable != false || var1.Const != false {
 		t.Fatalf("var1 not as it should be, got: %v", var1)
 	}
 
@@ -50,7 +51,7 @@ func TestNewScope(t *testing.T) {
 		t.Fatalf("Element var2 not found")
 	}
 
-	if var2.SymbolType != language.CharType || var2.Callable != false || var2.Const != true {
+	if var2.SymbolType != types2.CharType || var2.Callable != false || var2.Const != true {
 		t.Fatalf("var2 not as it should be, got: %v", var2)
 	}
 
@@ -59,7 +60,7 @@ func TestNewScope(t *testing.T) {
 		t.Fatalf("Element var4 not found")
 	}
 
-	if var4.SymbolType.(*language.StringType) == language.NewString(6) || var4.Callable != true || var4.Const != false {
+	if var4.SymbolType.(*types2.StringType) == types2.NewString(6) || var4.Callable != true || var4.Const != false {
 		t.Fatalf("var4 not as it should be, got: %v", var4)
 	}
 
@@ -75,7 +76,7 @@ func TestNewScope(t *testing.T) {
 		t.Fatalf("Element var1 not found")
 	}
 
-	if var1.SymbolType != language.IntType || var1.Callable != false || var1.Const != false {
+	if var1.SymbolType != types2.IntType || var1.Callable != false || var1.Const != false {
 		t.Fatalf("var1 not as it should be, got: %v", var1)
 	}
 

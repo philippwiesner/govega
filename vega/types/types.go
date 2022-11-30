@@ -4,14 +4,16 @@
 //
 // types.go implements data types which can be recognised in lexical analysis
 
-package language
+package types
 
-import "govega/vega/language/tokens"
+import (
+	"govega/vega/language/tokens"
+)
 
 // BasicType represents simple or basic variable types like integers, floating point numbers, chars or boolean values
 type BasicType struct {
-	tokens.IWord     // keyWord describing type (int, float, char, bool)
-	width        int // size of memory storage space
+	tokens.Word     // keyWord describing type (int, float, char, bool)
+	width       int // size of memory storage space
 }
 
 // newBasicType is the constructor for new a BasicType
@@ -19,7 +21,7 @@ type BasicType struct {
 // Takes the name of the type, tag and memory storage space.
 func newBasicType(varType string, tag int, w int) *BasicType {
 	return &BasicType{
-		IWord: tokens.NewWord(varType, tag),
+		Word:  tokens.NewWord(varType, tag),
 		width: w,
 	}
 }

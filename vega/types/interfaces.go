@@ -4,13 +4,11 @@
 //
 // interfaces.go defines external interfaces for data types
 
-package language
-
-import "govega/vega/language/tokens"
+package types
 
 // IBasicType interface for BasicType
 type IBasicType interface {
-	tokens.IWord   // IWord interface from word token
+	// IWord interface from word token
 	GetWidth() int // get type memory size
 }
 

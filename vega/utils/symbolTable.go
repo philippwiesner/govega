@@ -2,7 +2,7 @@ package utils
 
 import (
 	"govega/vega/helper"
-	"govega/vega/language"
+	"govega/vega/types"
 )
 
 // scope defines a variable lookup scope
@@ -60,14 +60,14 @@ func (st *SymbolTable) getScopeName() string {
 
 // Symbol is stored in the symbol table
 type Symbol struct {
-	name       string              // symbol (identifier) name to be looked up with
-	SymbolType language.IBasicType // identifier data tybe
-	Callable   bool                // flag if identifier is callable (function declaration)
-	Const      bool                // flag if identifier is a constant
+	name       string           // symbol (identifier) name to be looked up with
+	SymbolType types.IBasicType // identifier data tybe
+	Callable   bool             // flag if identifier is callable (function declaration)
+	Const      bool             // flag if identifier is a constant
 }
 
 // NewSymbol creates a new Symbol
-func NewSymbol(name string, varType language.IBasicType, callable bool, con bool) *Symbol {
+func NewSymbol(name string, varType types.IBasicType, callable bool, con bool) *Symbol {
 	return &Symbol{
 		name:       name,
 		SymbolType: varType,

@@ -1,10 +1,19 @@
-package frontend_test
+package parser_test
 
 import (
 	"testing"
 
-	. "govega/vega/frontend"
+	"govega/vega/parser"
+	"govega/vega/scanner"
+	"govega/vega/token"
 )
+
+func newTestFile(source []byte) token.File {
+	return token.File{
+		Name:   "/path/to/test.vg",
+		Source: source,
+	}
+}
 
 func TestParser_ParseError(t *testing.T) {
 	tests := []struct {
@@ -40,101 +49,101 @@ func TestParser_ParseError(t *testing.T) {
 		{
 			"No function param name",
 			"func test(int -",
-			"Mismatched input '-', expected '[' or <identifier>",
+			"Mismatched input '-', expected <identifier>",
 		},
 		{
 			"No closing array definition",
-			"func test(int [-",
-			"Extraneous input '-', expected ']'",
+			"func test([int",
+			"Extraneous input 'int', expected ']'",
 		},
 		{
-			"No array name or new array declaration",
-			"func test(int []-",
-			"Mismatched input '-', expected '[' or <identifier>",
+			"No array name",
+			"func test([]int -",
+			"Mismatched input '-', expected <identifier>",
 		},
 		{
 			"No closing bracket or next param operator",
-			"func test(int []a int",
+			"func test([]int a int",
 			"Mismatched input 'int', expected ',' or ')'",
 		},
 		{
 			"Empty param type",
-			"func test(int []a, )",
+			"func test([]int a, )",
 			"Mismatched input ')', expected <terminal_variable_type>",
 		},
 		{
 			"Invalid variable type",
-			"func test(int []a, int b) -",
+			"func test([]int a, int b) -",
 			"Mismatched input '-', expected <variable_type>",
 		},
 		{
 			"No function body",
-			"func test(int []a, int b) int -",
+			"func test([]int a, int b) int -",
 			"Mismatched input '-', expected '{'",
 		},
 		{
 			"Missing function body statement",
-			"func test(int []a, int b) int { -",
+			"func test([]int a, int b) int { -",
 			"Mismatched input '-', expected 'pass;' or <statement>",
 		},
 		{
 			"Empty function body statement",
-			"func test(int []a, int b) int { }",
+			"func test([]int a, int b) int { }",
 			"Mismatched input '}', expected 'pass;' or <statement>",
 		},
 		{
 			"Missing line delimiter after pass statement",
-			"func test(int []a, int b) int { pass }",
+			"func test([]int a, int b) int { pass }",
 			"Mismatched input '}', expected ';' or line break",
 		},
 		{
 			"Missing line delimiter after continue statement",
-			"func test(int []a, int b) int { continue -",
+			"func test(int a, int b) int { continue -",
 			"Mismatched input '-', expected ';' or line break",
 		},
 		{
 			"Missing line delimiter after break statement",
-			"func test(int []a, int b) int { break -",
+			"func test(int a, int b) int { break -",
 			"Mismatched input '-', expected ';' or line break",
 		},
 		{
 			"Pass and following statements",
-			"func test(int []a, int b) int { break; pass;",
+			"func test(int a, int b) int { break; pass;",
 			"Mismatched input 'pass', expected <statement> or '}'",
 		},
 		{
 			"No pass in non empty scope",
-			"func test(int []a, int b) int { pass; break;",
+			"func test(int a, int b) int { pass; break;",
 			"Mismatched input 'break', expected '}'",
 		},
 		{
 			"Missing if conditional",
-			"func test(int []a, int b) int { if {",
+			"func test(int a, int b) int { if {",
 			"Mismatched input '{', expected <unary>",
 		},
 		{
 			"Missing conditional body",
-			"func test(int []a, int b) int { if true }",
+			"func test(int a, int b) int { if true }",
 			"Mismatched input '}', expected '{'",
 		},
 		{
 			"No closing scope or following statement",
-			"func test(int []a, int b) int { if true { pass; } -",
+			"func test(int a, int b) int { if true { pass; } -",
 			"Mismatched input '-', expected <statement> or '}'",
 		},
 		{
 			"Missing elif conditional",
-			"func test(int []a, int b) int { if true { pass; } elif {",
+			"func test(int a, int b) int { if true { pass; } elif {",
 			"Mismatched input '{', expected <unary>",
 		},
 		{
 			"Missing second elif conditional",
-			"func test(int []a, int b) int { if true { pass; } elif true { break; } elif {",
+			"func test(int a, int b) int { if true { pass; } elif true { break; } elif {",
 			"Mismatched input '{', expected <unary>",
 		},
 		{
 			"Missing conditional else statement body",
-			"func test(int []a, int b) int { if true { pass; } else -",
+			"func test(int a, int b) int { if true { pass; } else -",
 			"Mismatched input '-', expected '{'",
 		},
 		{
@@ -189,153 +198,153 @@ func TestParser_ParseError(t *testing.T) {
 		},
 		{
 			"Missing while conditional",
-			"func test(int []a, int b) int { while ;",
+			"func test(int a, int b) int { while ;",
 			"Mismatched input ';', expected <unary>",
 		},
 		{
 			"Missing return expression",
-			"func test(int []a, int b) int { return ;",
+			"func test(int a, int b) int { return ;",
 			"Mismatched input ';', expected <unary>",
 		},
 		{
 			"Missing return delimiter",
-			"func test(int []a, int b) int { return true }",
+			"func test(int a, int b) int { return true }",
 			"Mismatched input '}', expected ';' or line break",
 		},
 		{
 			"No valid const variable type",
-			"func test(int []a, int b) int { const foo",
-			"Mismatched input 'foo', expected <variable_type>",
+			"func test(int a, int b) int { const ;",
+			"Mismatched input ';', expected <variable_type>",
 		},
 		{
 			"No identifier or array",
-			"func test(int []a, int b) int { int ;",
-			"Mismatched input ';', expected <identifier> or '['",
+			"func test(int a, int b) int { var int ;",
+			"Mismatched input ';', expected <identifier>",
 		},
 		{
 			"No int in array declaration",
-			"func test(int []a, int b) int { int[;",
-			"Mismatched input ';', expected <INT>",
+			"func test(int a, int b) int { var [bool;",
+			"Mismatched input 'bool', expected <INT>",
 		},
 		{
 			"No closing array bracket",
-			"func test(int []a, int b) int { int[8;",
-			"Mismatched input ';', expected ']'",
+			"func test(int a, int b) int { var [8int",
+			"Mismatched input 'int', expected ']'",
 		},
 		{
 			"No int in two-dim array declaration",
-			"func test(int []a, int b) int { int[8][;",
-			"Mismatched input ';', expected <INT>",
+			"func test(int a, int b) int { var [8][bool;",
+			"Mismatched input 'bool', expected <INT>",
 		},
 		{
 			"No new array dimension or identifier after array",
-			"func test(int []a, int b) int { int[8];",
-			"Mismatched input ';', expected <identifier> or '['",
+			"func test(int a, int b) int { var [8]int;",
+			"Mismatched input ';', expected <identifier>",
 		},
 		{
 			"No comma or assignment",
-			"func test(int []a, int b) int { int[8] a }",
+			"func test(int a, int b) int { var [8]int a }",
 			"Mismatched input '}', expected ';' or line break",
 		},
 		{
 			"Missing delimiter after declaration assignment",
-			"func test(int []a, int b) int { int[8] a = 5}",
+			"func test(int a, int b) int { var [8]int a = 5}",
 			"Mismatched input '}', expected ';' or line break",
 		},
 		{
 			"Missing funcCall, array, comma or assignment",
-			"func test(int []a, int b) int { a}",
-			"Mismatched input '}', expected '(', '[', ',' or '='",
+			"func test(int a, int b) int { a}",
+			"Mismatched input '}', expected '(', '[', or '='",
 		},
 		{
 			"Missing funcCall parameter",
-			"func test(int []a, int b) int { a(}",
+			"func test(int a, int b) int { a(}",
 			"Mismatched input '}', expected <unary>",
 		},
 		{
 			"Missing funcCall comma or closing bracket",
-			"func test(int []a, int b) int { a(b c",
+			"func test(int a, int b) int { a(b c",
 			"Mismatched input 'c', expected ',' or ')'",
 		},
 		{
 			"Missing funcCall closing bracket",
-			"func test(int []a, int b) int { a(b, c}",
+			"func test(int a, int b) int { a(b, c}",
 			"Mismatched input '}', expected ',' or ')'",
 		},
 		{
 			"No assigment after funccall",
-			"func test(int []a, int b) int { a(b, c)=",
+			"func test(int a, int b) int { a(b, c)=",
 			"Mismatched input '=', expected ';' or line break",
 		},
 		{
 			"No expression in array assignment",
-			"func test(int []a, int b) int { a[}",
+			"func test(int a, int b) int { a[}",
 			"Mismatched input '}', expected <unary>",
 		},
 		{
 			"No expression in two dim array assignment",
-			"func test(int []a, int b) int { a[b][}",
+			"func test(int a, int b) int { a[b][}",
 			"Mismatched input '}', expected <unary>",
 		},
 		{
 			"Missing assignment expression",
-			"func test(int []a, int b) int { a[b] = }",
+			"func test(int a, int b) int { a[b] = }",
 			"Mismatched input '}', expected <unary>",
 		},
 		{
 			"Missing delimiter",
-			"func test(int []a, int b) int { a[b] = 5}",
+			"func test(int a, int b) int { a[b] = 5}",
 			"Mismatched input '}', expected ';' or line break",
 		},
 		{
 			"Missing unary in function call",
-			"func test(int []a, int b) int { a = b( }",
+			"func test(int a, int b) int { a = b( }",
 			"Mismatched input '}', expected <unary>",
 		},
 		{
 			"Missing coma or closing bracket",
-			"func test(int []a, int b) int { a = b(a}",
+			"func test(int a, int b) int { a = b(a}",
 			"Mismatched input '}', expected ',' or ')'",
 		},
 		{
 			"Missing unary after open bracket",
-			"func test(int []a, int b) int { a = (}",
+			"func test(int a, int b) int { a = (}",
 			"Mismatched input '}', expected <unary>",
 		},
 		{
 			"Missing closing bracket pair",
-			"func test(int []a, int b) int { a = (b+(c+d)}",
+			"func test(int a, int b) int { a = (b+(c+d)}",
 			"Mismatched input '}', expected ')'",
 		},
 		{
 			"Incomplete array declaration",
-			"func test(int []a, int b) int { a = [}",
+			"func test(int a, int b) int { a = [}",
 			"Mismatched input '}', expected <unary>",
 		},
 		{
 			"Incomplete array declaration, second element",
-			"func test(int []a, int b) int { a = [b}",
+			"func test(int a, int b) int { a = [b}",
 			"Mismatched input '}', expected ',' or ']'",
 		},
 		{
 			"Incomplete array access",
-			"func test(int []a, int b) int { a = b[}",
+			"func test(int a, int b) int { a = b[}",
 			"Mismatched input '}', expected <unary>",
 		},
 		{
 			"Incomplete array access, closing array bracket",
-			"func test(int []a, int b) int { a = b[4}",
+			"func test(int a, int b) int { a = b[4}",
 			"Mismatched input '}', expected ']'",
 		},
 		{
 			"String literal not terminated",
-			"func test(int []a, int b) int { a = 'fooBar",
+			"func test(int a, int b) int { a = \"fooBar",
 			"String literal not terminated",
 		},
 		{
 			"Invalid excape sequence",
-			"func test(int []a, int b) int { a = '\\Fd'",
-			"Invalid escape sequence",
+			"func test(int a, int b) int { a = '\\Fd'",
+			"Invalid escape sequence in literal",
 		},
 	}
 
@@ -343,17 +352,15 @@ func TestParser_ParseError(t *testing.T) {
 
 		testNumber := i + 1
 
-		vega := NewVega("/path/to/test.vg")
-		lexer := vega.NewLexer([]byte(tc.in))
-		parser := vega.NewParser(lexer)
-		parseErr := parser.Parse(parser)
+		p := parser.NewParser(newTestFile([]byte(tc.in)))
+		parseErr := p.Parse()
 
 		if parseErr == nil {
 			t.Fatalf("Test%d: Expected error, got nil", testNumber)
 		}
 
 		switch err := parseErr.(type) {
-		case IVError:
+		case scanner.Verror:
 			if err.GetMessage() != tc.want {
 				t.Fatalf("Test%d: %v:\n\n%v\n\nExpected error message to be:\n\t%v\nbut got:\n\t%v", testNumber, tc.name, tc.in, tc.want, err.GetMessage())
 			}
@@ -381,7 +388,7 @@ which spans over mutiple lines */
 // This is a single line comment
 
 // reserved array method
-func fooBar(int[] a, 
+func fooBar([]int a, 
 
 bool f) 
 
@@ -393,12 +400,13 @@ int
 	const int i; const int a
 	const int i
 	const int g
+	var float h
 
 	switch a {
 	case 'a':
 		return 2
 	case 'b':
-		int a;
+		var int a;
 		return 23
 	default:
 		return 0
@@ -408,7 +416,7 @@ int
 	case 'a':
 		return 2
 	case 'b':
-		int a;
+		var int a;
 		return 23
 	}
 
@@ -418,10 +426,10 @@ int
 }
 
 func main() int {
-	int[5] a = [1, 2, 4, 5, 6 + 8]
-	char c = 'g'
-	str s = '\xFF Hello World'
-	bool a = fooBar()
+	var [5]int a = [1, 2, 4, 5, 6 + 8]
+	var char c = 'g'
+	var str s = "\xFF Hello World"
+	var bool a = fooBar()
 	if c == 'g' and a {
 		while true {
 			if c == 'g' {
@@ -433,7 +441,7 @@ func main() int {
 	} elif false {
 		pass
 	} else {
-		float x = 0.5
+		var float x = 0.5
 	}
 
 	return 0
@@ -446,10 +454,8 @@ func main() int {
 
 		testNumber := i + 1
 
-		vega := NewVega("/path/to/test.vg")
-		lexer := vega.NewLexer([]byte(tc.in))
-		parser := vega.NewParser(lexer)
-		parseErr := parser.Parse(parser)
+		p := parser.NewParser(newTestFile([]byte(tc.in)))
+		parseErr := p.Parse()
 
 		if parseErr != nil {
 			t.Fatalf("Test%d: %v: Expected no error, but got:\n\n%v", testNumber, tc.name, parseErr)

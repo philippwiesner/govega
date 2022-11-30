@@ -1,55 +1,36 @@
-package frontend
+package parser
 
-import (
-	"testing"
-
-	"govega/vega/language/tokens"
-)
-
-type testParserInterface interface {
-	Parser
-	getCurrentToken() *lexicalToken
-	getNextToken() *lexicalToken
-	readToken() error
-	getToken() (*lexicalToken, error)
-	lookAHead(tag int) bool
-	matchToken(tag int) bool
-}
-
-type testParser struct {
-	parser
-}
-
+/*
 func newTestParser(inputCode []byte) testParserInterface {
-	v := &vega{
+	v := &frontend.vega{
 		file:      "/path/to/test.vg",
 		codeLines: []string{},
 	}
 	l := v.NewLexer(inputCode)
 	var parser testParserInterface = &testParser{
-		parser{
-			vega:  v,
-			lexer: l,
+		Parser{
+			vega:    v,
+			scanner: l,
 		},
 	}
 	return parser
 }
 
-func (t *testParser) getCurrentToken() *lexicalToken {
+func (t *testParser) getCurrentToken() *scanner.lexicalToken {
 	return t.currentToken
 }
 
-func (t *testParser) getNextToken() *lexicalToken {
+func (t *testParser) getNextToken() *scanner.lexicalToken {
 	return t.nextToken
 }
 
 func TestParserObject_getLexerError(t *testing.T) {
 	parser := newTestParser([]byte("'blubb\\H'"))
 	err := parser.readToken()
-	vErr := err.(IVError)
+	vErr := err.(frontend.IVError)
 
-	if vErr.GetErrorType() != invalidEscapeSequence {
-		t.Fatalf("Expected %v, got %v", invalidEscapeSequence, vErr.GetErrorType())
+	if vErr.GetErrorType() != frontend.invalidEscapeSequence {
+		t.Fatalf("Expected %v, got %v", frontend.invalidEscapeSequence, vErr.GetErrorType())
 	}
 }
 
@@ -100,3 +81,4 @@ func TestParserObject_lookAHead(t *testing.T) {
 	}
 
 }
+*/

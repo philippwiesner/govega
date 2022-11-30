@@ -17,9 +17,9 @@ func foobar(k: float, i: int, g: int = 6) -> float {
 
 func main() -> int {
     i: const int = 5;
-    k, l: float = 0;
+    k, s: float = 0;
     m: str = "Hello World";
     n: char = 'g';
     j: int[5] = [1, 2, 3, 4, 5];
-    l = foobar(1.2, i);
+    s = foobar(1.2, i);
 }

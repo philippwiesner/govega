@@ -9,11 +9,11 @@ functionParameterDeclaration
     ;
 
 functionParameterDefinition
-    :   terminalVariableType (LARRAY RARRAY)* ID
+    :   (LARRAY RARRAY)* terminalVariableType ID
     ;
 
 functionReturnType
-    :   terminalVariableType (LARRAY RARRAY)*
+    :   (LARRAY RARRAY)* terminalVariableType
     ;
 
 scopeStatement
@@ -21,7 +21,7 @@ scopeStatement
     ;
 
 statement
-	:	CONST? terminalVariableType (LARRAY INT RARRAY)* ID (ASSIGN booleanExpression)? DELIMITER
+	:	CONST? (LARRAY INT RARRAY)* terminalVariableType ID (ASSIGN booleanExpression)? DELIMITER
 	|   ID arrayAccess* ASSIGN booleanExpression DELIMITER
 	|   ID funcCall
 	|   RETURN booleanExpression DELIMITER
@@ -31,10 +31,6 @@ statement
 	|	IF conditionalScope (ELIF conditionalScope)* (ELSE scopeStatement)?
 	|   SWITCH expression LCURLY (CASE terminal COLON statement+)+ (DEFAULT COLON statement+)? RCURLY
 	;
-
-conditionalScope
-    :   booleanExpression scopeStatement
-    ;
 
 booleanExpression
     :   comparisonExpression ((OR | AND) comparisonExpression)*
